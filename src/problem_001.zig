@@ -5,7 +5,7 @@ fn updateList(list: []i32, sum: i32) void {
     for (list) |val, idx| {
         if (sum > val) {
             list[idx] = sum;
-            break;
+            return;
         }
     }
 }
