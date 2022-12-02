@@ -52,7 +52,7 @@ fn charToWeapon(c: u8) anyerror!Weapon {
         'A', 'X' => Weapon.Rock,
         'B', 'Y' => Weapon.Paper,
         'C', 'Z' => Weapon.Scissors,
-        else => error.AccessDenied,
+        else => unreachable,
     };
 }
 
@@ -87,7 +87,7 @@ fn getP2Weapon(c: u8, p1: Weapon) anyerror!Weapon {
                 Weapon.Scissors => return Weapon.Rock,
             }
         },
-        else => error.AccessDenied,
+        else => unreachable,
     };
 }
 
