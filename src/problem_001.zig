@@ -1,7 +1,7 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
-fn get_sum_list() anyerror!std.ArrayList(i32) {
+fn getSumList() anyerror!std.ArrayList(i32) {
     const allocator = std.heap.page_allocator;
     const buf = try readFileIntoBuf(allocator, "problems/problem_001.txt");
     var tokens = std.mem.split(u8, buf, "\n");
@@ -21,24 +21,24 @@ fn get_sum_list() anyerror!std.ArrayList(i32) {
     return list;
 }
 
-pub fn part1() anyerror!i32 {
-    var list = try get_sum_list();
+fn part1() anyerror!i32 {
+    var list = try getSumList();
     defer list.deinit();
     return list.items[0];
 }
 
-pub fn part2() anyerror!i32 {
-    var list = try get_sum_list();
+fn part2() anyerror!i32 {
+    var list = try getSumList();
     defer list.deinit();
     return list.items[0] + list.items[1] + list.items[2];
 }
 
-test "part_001" {
+test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(i32, 67633), ans);
 }
 
-test "part_002" {
+test "part2" {
     const ans = try part2();
     try std.testing.expectEqual(@as(i32, 199628), ans);
 }
