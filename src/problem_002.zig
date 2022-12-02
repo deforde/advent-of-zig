@@ -14,8 +14,13 @@ const p2_score_lookup = [_][3]i32{
 };
 
 fn getTotalScore(path: []const u8, lookup: *const [3][3]i32) anyerror!i32 {
-    const allocator = std.heap.page_allocator;
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
     const buf = try readFileIntoBuf(allocator, path);
+    defer allocator.free(buf);
+
     var lines = std.mem.tokenize(u8, buf, "\n");
     var sum: i32 = 0;
     while (lines.next()) |line| {

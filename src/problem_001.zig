@@ -11,8 +11,13 @@ fn updateList(list: []i32, sum: i32) void {
 }
 
 fn getSumList() anyerror![3]i32 {
-    const allocator = std.heap.page_allocator;
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
     const buf = try readFileIntoBuf(allocator, "problems/problem_001.txt");
+    defer allocator.free(buf);
+
     var tokens = std.mem.split(u8, buf, "\n");
     var sum: i32 = 0;
     var list = [3]i32{ 0, 0, 0 };
@@ -27,6 +32,7 @@ fn getSumList() anyerror![3]i32 {
     }
     updateList(&list, sum);
     std.sort.sort(i32, &list, {}, std.sort.desc(i32));
+
     return list;
 }
 
