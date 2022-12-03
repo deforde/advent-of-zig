@@ -96,26 +96,30 @@ fn solve2(path: []const u8) anyerror!i32 {
         if (group_idx == 2) {
             var dup: i32 = -1;
 
-            for (group[0].*.items) |c1_val| {
-                var in_c2 = false;
-                for (group[1].*.items) |c2_val| {
-                    if (c1_val == c2_val) {
-                        in_c2 = true;
-                        break;
-                    }
-                }
-                if (in_c2) {
-                    for (group[2].*.items) |c3_val| {
-                        if (c1_val == c3_val) {
-                            dup = c1_val;
-                            break;
-                        }
-                    }
-                }
-                if (dup != -1) {
+            var idxC1: usize = 0;
+            var idxC2: usize = 0;
+            var idxC3: usize = 0;
+            while (idxC1 < c1.items.len and idxC2 < c2.items.len and idxC3 < c3.items.len) {
+                const c1_val = c1.items[idxC1];
+                const c2_val = c2.items[idxC2];
+                const c3_val = c3.items[idxC3];
+                const items = [_]i32{ c1_val, c2_val, c3_val };
+                const max = std.mem.max(i32, &items);
+                if (c1_val == c2_val and c1_val == c3_val) {
+                    dup = c1_val;
                     break;
                 }
+                if (c1_val < max) {
+                    idxC1 += 1;
+                }
+                if (c2_val < max) {
+                    idxC2 += 1;
+                }
+                if (c3_val < max) {
+                    idxC3 += 1;
+                }
             }
+
             std.debug.assert(dup != -1);
 
             sum += dup;

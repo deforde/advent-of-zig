@@ -31,7 +31,7 @@ fn getSumList() anyerror![3]i32 {
         }
     }
     updateList(&list, sum);
-    std.sort.sort(i32, &list, {}, std.sort.desc(i32));
+    std.sort.sort(i32, &list, {}, comptime std.sort.desc(i32));
 
     return list;
 }
