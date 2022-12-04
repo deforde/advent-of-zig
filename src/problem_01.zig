@@ -15,7 +15,7 @@ fn getSumList() anyerror![3]i32 {
     const allocator = gpa.allocator();
     defer std.debug.assert(!gpa.deinit());
 
-    const buf = try readFileIntoBuf(allocator, "problems/problem_001.txt");
+    const buf = try readFileIntoBuf(allocator, "problems/problem_01.txt");
     defer allocator.free(buf);
 
     var tokens = std.mem.split(u8, buf, "\n");

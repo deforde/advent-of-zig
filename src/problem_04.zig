@@ -52,19 +52,19 @@ fn solve2(path: []const u8) anyerror!i32 {
 }
 
 fn example1() anyerror!i32 {
-    return solve1("problems/example_004.txt");
+    return solve1("problems/example_04.txt");
 }
 
 fn example2() anyerror!i32 {
-    return solve2("problems/example_004.txt");
+    return solve2("problems/example_04.txt");
 }
 
 fn part1() anyerror!i32 {
-    return solve1("problems/problem_004.txt");
+    return solve1("problems/problem_04.txt");
 }
 
 fn part2() anyerror!i32 {
-    return solve2("problems/problem_004.txt");
+    return solve2("problems/problem_04.txt");
 }
 
 test "example1" {
