@@ -40,8 +40,8 @@ fn solve(path: []const u8, simultaneous: bool) anyerror![9]u8 {
             _ = elems.next();
             const dst = try std.fmt.parseInt(usize, elems.next().?, 10) - 1;
             if (simultaneous) {
-                var x: usize = 0;
                 const insert_idx = crate_stacks[dst].items.len;
+                var x: usize = 0;
                 while (x < cnt) : (x += 1) {
                     try crate_stacks[dst].insert(insert_idx, crate_stacks[src].pop());
                 }
@@ -56,8 +56,8 @@ fn solve(path: []const u8, simultaneous: bool) anyerror![9]u8 {
         var i: usize = 1;
         while (i < line.len) : (i += 4) {
             const ch = line[i];
-            const stack_id = (i - 1) / 4;
             if (ch >= 'A' and ch <= 'Z') {
+                const stack_id = (i - 1) / 4;
                 try crate_stacks[stack_id].insert(0, ch);
             }
         }
@@ -65,9 +65,10 @@ fn solve(path: []const u8, simultaneous: bool) anyerror![9]u8 {
 
     var ans = [9]u8{ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     for (crate_stacks) |stack, idx| {
-        if (stack.items.len != 0) {
-            ans[idx] = stack.items[stack.items.len - 1];
+        if (stack.items.len == 0) {
+            break;
         }
+        ans[idx] = stack.items[stack.items.len - 1];
     }
 
     return ans;
