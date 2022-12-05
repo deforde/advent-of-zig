@@ -20,6 +20,11 @@ fn solve(path: []const u8, simultaneous: bool) anyerror![9]u8 {
         std.ArrayList(u8).init(allocator),
         std.ArrayList(u8).init(allocator),
     };
+    defer {
+        for (crate_stacks) |stack| {
+            stack.deinit();
+        }
+    }
 
     var lines = std.mem.tokenize(u8, buf, "\n");
     while (lines.next()) |line| {
@@ -63,7 +68,6 @@ fn solve(path: []const u8, simultaneous: bool) anyerror![9]u8 {
         if (stack.items.len != 0) {
             ans[idx] = stack.items[stack.items.len - 1];
         }
-        stack.deinit();
     }
 
     return ans;
@@ -87,20 +91,20 @@ fn part2() anyerror![9]u8 {
 
 test "example1" {
     const ans = try example1();
-    try std.testing.expectEqual([_]u8{ 'C', 'M', 'Z', 0, 0, 0, 0, 0, 0 }, ans);
+    try std.testing.expectEqualStrings("CMZ", ans[0..3]);
 }
 
 test "part1" {
     const ans = try part1();
-    try std.testing.expectEqual([9]u8{ 'R', 'F', 'F', 'F', 'W', 'B', 'P', 'N', 'S' }, ans);
+    try std.testing.expectEqualStrings("RFFFWBPNS", ans[0..]);
 }
 
 test "example2" {
     const ans = try example2();
-    try std.testing.expectEqual([_]u8{ 'M', 'C', 'D', 0, 0, 0, 0, 0, 0 }, ans);
+    try std.testing.expectEqualStrings("MCD", ans[0..3]);
 }
 
 test "part2" {
     const ans = try part2();
-    try std.testing.expectEqual([9]u8{ 'C', 'Q', 'Q', 'B', 'B', 'J', 'F', 'C', 'S' }, ans);
+    try std.testing.expectEqualStrings("CQQBBJFCS", ans[0..]);
 }
