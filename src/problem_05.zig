@@ -35,15 +35,10 @@ fn solve(path: []const u8, simultaneous: bool) anyerror![9]u8 {
             _ = elems.next();
             const dst = try std.fmt.parseInt(usize, elems.next().?, 10) - 1;
             if (simultaneous) {
-                var temp = std.ArrayList(u8).init(allocator);
-                defer temp.deinit();
                 var x: usize = 0;
+                const insert_idx = crate_stacks[dst].items.len;
                 while (x < cnt) : (x += 1) {
-                    try temp.append(crate_stacks[src].pop());
-                }
-                x = 0;
-                while (x < cnt) : (x += 1) {
-                    try crate_stacks[dst].append(temp.pop());
+                    try crate_stacks[dst].insert(insert_idx, crate_stacks[src].pop());
                 }
             } else {
                 var x: usize = 0;
