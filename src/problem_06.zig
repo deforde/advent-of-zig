@@ -9,57 +9,16 @@ fn solve(path: []const u8, stm_cnt: usize) anyerror!usize {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
-    var message = [26]i32{
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-    };
-    var ch: usize = @as(usize, buf[0] - 'a');
-    var k: usize = 0;
-    while (k < (stm_cnt - 1)) : (k += 1) {
-        message[@as(usize, buf[k] - 'a')] += 1;
-    }
     var i: usize = stm_cnt - 1;
     while (i < buf.len) : (i += 1) {
-        var x: usize = @as(usize, buf[i] - 'a');
-        message[x] += 1;
-        var solved: bool = true;
-        var cnt: usize = 0;
-        for (message) |char| {
-            if (char > 1) {
-                solved = false;
-                break;
-            }
-            cnt += @intCast(usize, char);
+        var bitset = std.bit_set.IntegerBitSet(32).initEmpty();
+        var j: usize = i - (stm_cnt - 1);
+        while (j <= i) : (j += 1) {
+            bitset.set(@intCast(usize, buf[j] - 'a'));
         }
-        if (solved and cnt == stm_cnt) {
+        if (bitset.count() == stm_cnt) {
             break;
         }
-        message[ch] -= 1;
-        ch = @as(usize, buf[i - (stm_cnt - 2)] - 'a');
     }
 
     return i + 1;
