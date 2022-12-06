@@ -14,9 +14,13 @@ fn solve(path: []const u8, stm_cnt: usize) anyerror!usize {
         var bitset = std.bit_set.IntegerBitSet(26).initEmpty();
         var j: usize = i - (stm_cnt - 1);
         while (j <= i) : (j += 1) {
-            bitset.set(@intCast(usize, buf[j] - 'a'));
+            const bit = @intCast(usize, buf[j] - 'a');
+            if (bitset.isSet(bit)) {
+                break;
+            }
+            bitset.set(bit);
         }
-        if (bitset.count() == stm_cnt) {
+        if (j == i + 1) {
             break;
         }
     }
