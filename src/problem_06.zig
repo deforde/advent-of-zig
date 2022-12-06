@@ -11,7 +11,7 @@ fn solve(path: []const u8, stm_cnt: usize) anyerror!usize {
 
     var i: usize = stm_cnt - 1;
     while (i < buf.len) : (i += 1) {
-        var bitset = std.bit_set.IntegerBitSet(32).initEmpty();
+        var bitset = std.bit_set.IntegerBitSet(26).initEmpty();
         var j: usize = i - (stm_cnt - 1);
         while (j <= i) : (j += 1) {
             bitset.set(@intCast(usize, buf[j] - 'a'));
