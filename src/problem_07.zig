@@ -60,6 +60,22 @@ fn accumulateRecursiveSizes(root: *const Node, max_size: usize) usize {
     return size;
 }
 
+fn findSmallestDirInExcessInner(node: *const Node, min_size: usize, size: *usize) void {
+    if (node.size.? >= min_size and node.size.? <= size.* and node.children.count() != 0) {
+        size.* = node.size.?;
+    }
+    var it = node.children.iterator();
+    while (it.next()) |child| {
+        findSmallestDirInExcessInner(child.value_ptr, min_size, size);
+    }
+}
+
+fn findSmallestDirInExcess(root: *const Node, min_size: usize) usize {
+    var size: usize = 70000000;
+    findSmallestDirInExcessInner(root, min_size, &size);
+    return size;
+}
+
 fn createTree(allocator: std.mem.Allocator, buf: []const u8) anyerror!Node {
     var root = Node{
         .children = std.StringHashMap(Node).init(allocator),
@@ -110,7 +126,7 @@ fn createTree(allocator: std.mem.Allocator, buf: []const u8) anyerror!Node {
     return root;
 }
 
-fn solve(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     // defer std.debug.assert(!gpa.deinit());
@@ -127,12 +143,43 @@ fn solve(path: []const u8) anyerror!usize {
     return ans;
 }
 
+fn solve2(path: []const u8) anyerror!usize {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    // defer std.debug.assert(!gpa.deinit());
+
+    const buf = try readFileIntoBuf(allocator, path);
+    defer allocator.free(buf);
+
+    var root = try createTree(allocator, buf);
+
+    // try printTree(allocator, &root);
+
+    const capacity: usize = 70000000;
+    const required: usize = 30000000;
+    const available = capacity - root.size.?;
+    std.debug.assert(available < required);
+    const min_to_delete = required - available;
+
+    const ans = findSmallestDirInExcess(&root, min_to_delete);
+
+    return ans;
+}
+
 fn example1() anyerror!usize {
-    return solve("problems/example_07.txt");
+    return solve1("problems/example_07.txt");
+}
+
+fn example2() anyerror!usize {
+    return solve2("problems/example_07.txt");
 }
 
 fn part1() anyerror!usize {
-    return solve("problems/problem_07.txt");
+    return solve1("problems/problem_07.txt");
+}
+
+fn part2() anyerror!usize {
+    return solve2("problems/problem_07.txt");
 }
 
 test "example1" {
@@ -140,7 +187,17 @@ test "example1" {
     try std.testing.expectEqual(@as(usize, 95437), ans);
 }
 
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(usize, 24933642), ans);
+}
+
 test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(usize, 1232307), ans);
+}
+
+test "part2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(usize, 7268994), ans);
 }
