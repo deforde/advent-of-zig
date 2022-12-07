@@ -76,6 +76,18 @@ fn findSmallestDirInExcess(root: *const Node, min_size: usize) usize {
     return size;
 }
 
+fn freeTreeInner(node: *Node) void {
+    var it = node.children.iterator();
+    while (it.next()) |child| {
+        freeTreeInner(child.value_ptr);
+    }
+    node.children.deinit();
+}
+
+fn freeTree(root: *Node) void {
+    freeTreeInner(root);
+}
+
 fn createTree(allocator: std.mem.Allocator, buf: []const u8) anyerror!Node {
     var root = Node{
         .children = std.StringHashMap(Node).init(allocator),
@@ -110,6 +122,7 @@ fn createTree(allocator: std.mem.Allocator, buf: []const u8) anyerror!Node {
                 }
             }
         } else {
+            std.debug.assert(listing);
             var records = std.mem.tokenize(u8, line, " ");
             const f1 = records.next().?;
             const name = records.next().?;
@@ -129,12 +142,13 @@ fn createTree(allocator: std.mem.Allocator, buf: []const u8) anyerror!Node {
 fn solve1(path: []const u8) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    // defer std.debug.assert(!gpa.deinit());
+    defer std.debug.assert(!gpa.deinit());
 
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
     var root = try createTree(allocator, buf);
+    defer freeTree(&root);
 
     // try printTree(allocator, &root);
 
@@ -146,12 +160,13 @@ fn solve1(path: []const u8) anyerror!usize {
 fn solve2(path: []const u8) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    // defer std.debug.assert(!gpa.deinit());
+    defer std.debug.assert(!gpa.deinit());
 
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
     var root = try createTree(allocator, buf);
+    defer freeTree(&root);
 
     // try printTree(allocator, &root);
 
