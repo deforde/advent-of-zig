@@ -60,14 +60,7 @@ fn accumulateRecursiveSizes(root: *const Node, max_size: usize) usize {
     return size;
 }
 
-fn solve(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    // defer std.debug.assert(!gpa.deinit());
-
-    const buf = try readFileIntoBuf(allocator, path);
-    defer allocator.free(buf);
-
+fn createTree(allocator: std.mem.Allocator, buf: []const u8) anyerror!Node {
     var root = Node{
         .children = std.StringHashMap(Node).init(allocator),
     };
@@ -113,7 +106,22 @@ fn solve(path: []const u8) anyerror!usize {
     }
 
     _ = root.calcRecursiveSize();
+
+    return root;
+}
+
+fn solve(path: []const u8) anyerror!usize {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    // defer std.debug.assert(!gpa.deinit());
+
+    const buf = try readFileIntoBuf(allocator, path);
+    defer allocator.free(buf);
+
+    var root = try createTree(allocator, buf);
+
     // try printTree(allocator, &root);
+
     const ans = accumulateRecursiveSizes(&root, 100000);
 
     return ans;
@@ -134,5 +142,5 @@ test "example1" {
 
 test "part1" {
     const ans = try part1();
-    try std.testing.expectEqual(@as(usize, 95437), ans);
+    try std.testing.expectEqual(@as(usize, 1232307), ans);
 }
