@@ -14,6 +14,20 @@ const Node = struct {
         };
         try self.children.put(name, child);
     }
+
+    pub fn calcRecursiveSize(self: *Node) usize {
+        if (self.size != null) {
+            return self.size.?;
+        }
+        std.debug.assert(self.children.count() > 0);
+        var size: usize = 0;
+        var it = self.children.iterator();
+        while (it.next()) |child| {
+            size += child.value_ptr.calcRecursiveSize();
+        }
+        self.size = size;
+        return size;
+    }
 };
 
 fn printNode(allocator: std.mem.Allocator, name: []const u8, node: *const Node, indent: []const u8) anyerror!void {
@@ -30,6 +44,22 @@ fn printTree(allocator: std.mem.Allocator, root: *const Node) anyerror!void {
     try printNode(allocator, "/", root, "");
 }
 
+fn accumulateRecursiveSizesInner(node: *const Node, max_size: usize, size: *usize) void {
+    if (node.size.? <= max_size and node.children.count() != 0) {
+        size.* += node.size.?;
+    }
+    var it = node.children.iterator();
+    while (it.next()) |child| {
+        accumulateRecursiveSizesInner(child.value_ptr, max_size, size);
+    }
+}
+
+fn accumulateRecursiveSizes(root: *const Node, max_size: usize) usize {
+    var size: usize = 0;
+    accumulateRecursiveSizesInner(root, max_size, &size);
+    return size;
+}
+
 fn solve(path: []const u8) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -37,8 +67,6 @@ fn solve(path: []const u8) anyerror!usize {
 
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
-
-    var cnt: usize = 0;
 
     var root = Node{
         .children = std.StringHashMap(Node).init(allocator),
@@ -84,16 +112,27 @@ fn solve(path: []const u8) anyerror!usize {
         }
     }
 
-    try printTree(allocator, &root);
+    _ = root.calcRecursiveSize();
+    // try printTree(allocator, &root);
+    const ans = accumulateRecursiveSizes(&root, 100000);
 
-    return cnt;
+    return ans;
 }
 
 fn example1() anyerror!usize {
     return solve("problems/example_07.txt");
 }
 
+fn part1() anyerror!usize {
+    return solve("problems/problem_07.txt");
+}
+
 test "example1" {
     const ans = try example1();
+    try std.testing.expectEqual(@as(usize, 95437), ans);
+}
+
+test "part1" {
+    const ans = try part1();
     try std.testing.expectEqual(@as(usize, 95437), ans);
 }
