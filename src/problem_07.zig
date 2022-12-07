@@ -71,7 +71,7 @@ fn findSmallestDirInExcessInner(node: *const Node, min_size: usize, size: *usize
 }
 
 fn findSmallestDirInExcess(root: *const Node, min_size: usize) usize {
-    var size: usize = 70000000;
+    var size: usize = std.math.maxInt(usize);
     findSmallestDirInExcessInner(root, min_size, &size);
     return size;
 }
