@@ -38,6 +38,14 @@ fn logTailPos(tail: Coord, tail_positions: *std.ArrayList(Coord)) anyerror!void 
     }
 }
 
+fn simRope(rope: *std.ArrayList(Coord), tail_positions: *std.ArrayList(Coord)) anyerror!void {
+    var i: usize = 0;
+    while (i < rope.*.items.len - 1) : (i += 1) {
+        try moveFollower(rope.*.items[i], &rope.*.items[i + 1]);
+    }
+    try logTailPos(rope.*.items[rope.items.len - 1], tail_positions);
+}
+
 fn solve(path: []const u8, nknots: usize) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -53,7 +61,6 @@ fn solve(path: []const u8, nknots: usize) anyerror!usize {
         try rope.append(Coord{});
     }
     var head = &rope.items[0];
-    var tail = &rope.items[rope.items.len - 1];
 
     var tail_positions = std.ArrayList(Coord).init(allocator);
     defer tail_positions.deinit();
@@ -69,44 +76,28 @@ fn solve(path: []const u8, nknots: usize) anyerror!usize {
                 var i: i32 = 0;
                 while (i < cnt) : (i += 1) {
                     head.*.y += 1;
-                    var k: usize = 0;
-                    while (k < nknots - 1) : (k += 1) {
-                        try moveFollower(rope.items[k], &rope.items[k + 1]);
-                    }
-                    try logTailPos(tail.*, &tail_positions);
+                    try simRope(&rope, &tail_positions);
                 }
             },
             'D' => {
                 var i: i32 = 0;
                 while (i < cnt) : (i += 1) {
                     head.*.y -= 1;
-                    var k: usize = 0;
-                    while (k < nknots - 1) : (k += 1) {
-                        try moveFollower(rope.items[k], &rope.items[k + 1]);
-                    }
-                    try logTailPos(tail.*, &tail_positions);
+                    try simRope(&rope, &tail_positions);
                 }
             },
             'L' => {
                 var i: i32 = 0;
                 while (i < cnt) : (i += 1) {
                     head.*.x -= 1;
-                    var k: usize = 0;
-                    while (k < nknots - 1) : (k += 1) {
-                        try moveFollower(rope.items[k], &rope.items[k + 1]);
-                    }
-                    try logTailPos(tail.*, &tail_positions);
+                    try simRope(&rope, &tail_positions);
                 }
             },
             'R' => {
                 var i: i32 = 0;
                 while (i < cnt) : (i += 1) {
                     head.*.x += 1;
-                    var k: usize = 0;
-                    while (k < nknots - 1) : (k += 1) {
-                        try moveFollower(rope.items[k], &rope.items[k + 1]);
-                    }
-                    try logTailPos(tail.*, &tail_positions);
+                    try simRope(&rope, &tail_positions);
                 }
             },
             else => unreachable,
@@ -118,11 +109,19 @@ fn solve(path: []const u8, nknots: usize) anyerror!usize {
 }
 
 fn example1() anyerror!usize {
-    return solve("problems/example_09.txt", 2);
+    return solve("problems/example_1_09.txt", 2);
+}
+
+fn example2() anyerror!usize {
+    return solve("problems/example_2_09.txt", 10);
 }
 
 fn part1() anyerror!usize {
     return solve("problems/problem_09.txt", 2);
+}
+
+fn part2() anyerror!usize {
+    return solve("problems/problem_09.txt", 10);
 }
 
 test "example1" {
@@ -130,7 +129,17 @@ test "example1" {
     try std.testing.expectEqual(@as(usize, 13), ans);
 }
 
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(usize, 36), ans);
+}
+
 test "par1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(usize, 6212), ans);
+}
+
+test "par2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(usize, 2522), ans);
 }
