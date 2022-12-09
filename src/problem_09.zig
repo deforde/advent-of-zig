@@ -10,18 +10,15 @@ fn moveFollower(leader: Coord, follower: *Coord) anyerror!void {
     var delta_x = leader.x - follower.*.x;
     var delta_y = leader.y - follower.*.y;
 
-    const abs_delta_x = try std.math.absInt(delta_x);
-    const abs_delta_y = try std.math.absInt(delta_y);
-
-    if (abs_delta_x <= 1 and abs_delta_y <= 1) {
+    if (try std.math.absInt(delta_x) <= 1 and try std.math.absInt(delta_y) <= 1) {
         return;
     }
 
     if (delta_x != 0) {
-        delta_x = @divTrunc(delta_x, abs_delta_x);
+        delta_x = if (delta_x > 0) 1 else -1;
     }
     if (delta_y != 0) {
-        delta_y = @divTrunc(delta_y, abs_delta_y);
+        delta_y = if (delta_y > 0) 1 else -1;
     }
 
     follower.*.x += delta_x;
