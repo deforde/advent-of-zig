@@ -9,15 +9,19 @@ const Coord = struct {
 fn moveFollower(leader: Coord, follower: *Coord) anyerror!void {
     var delta_x = leader.x - follower.*.x;
     var delta_y = leader.y - follower.*.y;
-    if (try std.math.absInt(delta_x) <= 1 and try std.math.absInt(delta_y) <= 1) {
+
+    const abs_delta_x = try std.math.absInt(delta_x);
+    const abs_delta_y = try std.math.absInt(delta_y);
+
+    if (abs_delta_x <= 1 and abs_delta_y <= 1) {
         return;
     }
 
     if (delta_x != 0) {
-        delta_x = @divTrunc(delta_x, try std.math.absInt(delta_x));
+        delta_x = @divTrunc(delta_x, abs_delta_x);
     }
     if (delta_y != 0) {
-        delta_y = @divTrunc(delta_y, try std.math.absInt(delta_y));
+        delta_y = @divTrunc(delta_y, abs_delta_y);
     }
 
     follower.*.x += delta_x;
@@ -25,17 +29,12 @@ fn moveFollower(leader: Coord, follower: *Coord) anyerror!void {
 }
 
 fn logTailPos(tail: Coord, tail_positions: *std.ArrayList(Coord)) anyerror!void {
-    var unique = true;
     for (tail_positions.*.items) |pos| {
         if (pos.x == tail.x and pos.y == tail.y) {
-            unique = false;
-            break;
+            return;
         }
     }
-
-    if (unique) {
-        try tail_positions.*.append(tail);
-    }
+    try tail_positions.*.append(tail);
 }
 
 fn simRope(rope: *std.ArrayList(Coord), tail_positions: *std.ArrayList(Coord)) anyerror!void {
