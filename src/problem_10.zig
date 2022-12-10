@@ -19,7 +19,7 @@ const VM = struct {
     x: i32 = 1,
     cycle: i32 = 0,
     sig_strength_sum: usize = 0,
-    crt_line: [40]u8 = std.mem.zeroes([40]u8),
+    crt_line: [40]u8 = [40]u8{ '#', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.' },
 
     pub fn incCycle(self: *VM) void {
         self.cycle += 1;
@@ -56,7 +56,6 @@ fn solve(path: []const u8) anyerror!usize {
     defer allocator.free(buf);
 
     var vm = VM{};
-    vm.crt_line[0] = '#';
     std.debug.print("\n", .{});
 
     var lines = std.mem.tokenize(u8, buf, "\n");
