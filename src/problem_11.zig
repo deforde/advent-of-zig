@@ -69,11 +69,9 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
 
 fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anyerror!void {
     var super_modulo: u64 = 1;
-    {
-        var j: usize = 0;
-        while (j < monkeys.items.len) : (j += 1) {
-            super_modulo *= monkeys.items[j].test_quotient;
-        }
+    var k: usize = 0;
+    while (k < monkeys.items.len) : (k += 1) {
+        super_modulo *= monkeys.items[k].test_quotient;
     }
 
     var i: usize = 0;
