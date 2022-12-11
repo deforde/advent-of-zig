@@ -8,7 +8,7 @@ const Monkey = struct {
         SQR,
     };
 
-    items: std.ArrayList(u64),
+    items: std.ArrayList(std.math.big.int.Managed),
     op: Op = Monkey.Op.ADD,
     op_val: ?u64 = null,
     test_quotient: u64 = 1,
@@ -17,6 +17,10 @@ const Monkey = struct {
     inspect_cnt: usize = 0,
 
     pub fn deinit(self: *Monkey) void {
+        var i: usize = 0;
+        while (i < self.items.items.len) : (i += 1) {
+            self.items.items[i].deinit();
+        }
         self.items.deinit();
     }
 };
@@ -30,7 +34,7 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
     var blocks = std.mem.split(u8, buf, "\n\n");
     while (blocks.next()) |block| {
         var monkey = Monkey{
-            .items = std.ArrayList(u64).init(allocator),
+            .items = std.ArrayList(std.math.big.int.Managed).init(allocator),
         };
 
         var lines = std.mem.tokenize(u8, block, "\n");
@@ -38,7 +42,7 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
 
         var starting_items = std.mem.tokenize(u8, lines.next().?[18..], ", ");
         while (starting_items.next()) |item| {
-            try monkey.items.insert(0, try std.fmt.parseInt(u64, item, 10));
+            try monkey.items.insert(0, try std.math.big.int.Managed.initSet(allocator, try std.fmt.parseInt(u64, item, 10)));
         }
 
         var op_tokens = std.mem.tokenize(u8, lines.next().?[19..], " ");
@@ -67,28 +71,62 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
     return monkeys;
 }
 
-fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize) anyerror!void {
+fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anyerror!void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var rem = try std.math.big.int.Managed.init(allocator);
+    defer rem.deinit();
+
+    var zero = try std.math.big.int.Managed.initSet(allocator, 0);
+    defer zero.deinit();
+
+    var quotient = try std.math.big.int.Managed.initSet(allocator, 3);
+    defer quotient.deinit();
+
+    var test_quotient = try std.math.big.int.Managed.init(allocator);
+    defer test_quotient.deinit();
+
+    var opval = try std.math.big.int.Managed.init(allocator);
+    defer opval.deinit();
+
     var i: usize = 0;
+    std.debug.print("\n", .{});
     while (i < nrounds) : (i += 1) {
+        std.debug.print("{}/{}\r", .{ i + 1, nrounds });
         var j: usize = 0;
         while (j < monkeys.items.len) : (j += 1) {
             var monkey = &monkeys.items[j];
             while (monkey.*.items.popOrNull()) |item| {
                 monkey.*.inspect_cnt += 1;
                 var val = item;
+                // {
+                //     var val_str = try val.toString(allocator, 10, std.fmt.Case.lower);
+                //     defer allocator.free(val_str);
+                //     std.debug.print("{s}\n", .{val_str});
+                // }
                 switch (monkey.*.op) {
                     Monkey.Op.ADD => {
-                        val += monkey.*.op_val.?;
+                        try opval.set(monkey.*.op_val.?);
+                        try val.add(&val, &opval);
                     },
                     Monkey.Op.MUL => {
-                        val *= monkey.*.op_val.?;
+                        try opval.set(monkey.*.op_val.?);
+                        try val.mul(&val, &opval);
                     },
                     Monkey.Op.SQR => {
-                        val *= val;
+                        try val.mul(&val, &val);
                     },
                 }
-                val /= 3;
-                if (@mod(val, monkey.*.test_quotient) == 0) {
+                if (do_div) {
+                    try val.divTrunc(&rem, &val, &quotient);
+                }
+                try test_quotient.set(monkey.*.test_quotient);
+                var temp = try val.clone();
+                defer temp.deinit();
+                try temp.divFloor(&rem, &val, &test_quotient);
+                if (rem.eq(zero)) {
                     try monkeys.items[monkey.*.true_target].items.insert(0, val);
                 } else {
                     try monkeys.items[monkey.*.false_target].items.insert(0, val);
@@ -96,6 +134,7 @@ fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize) anyerror!void {
             }
         }
     }
+    std.debug.print("\n", .{});
 }
 
 fn printMonkeys(monkeys: *std.ArrayList(Monkey)) void {
@@ -109,7 +148,7 @@ fn printMonkeys(monkeys: *std.ArrayList(Monkey)) void {
     }
 }
 
-fn solve(path: []const u8) anyerror!usize {
+fn solve(path: []const u8, nrounds: usize, do_div: bool) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer std.debug.assert(!gpa.deinit());
@@ -123,7 +162,7 @@ fn solve(path: []const u8) anyerror!usize {
         monkeys.deinit();
     }
 
-    try simRounds(&monkeys, 20);
+    try simRounds(&monkeys, nrounds, do_div);
 
     // printMonkeys(&monkeys);
 
@@ -139,11 +178,19 @@ fn solve(path: []const u8) anyerror!usize {
 }
 
 fn example1() anyerror!usize {
-    return solve("problems/example_11.txt");
+    return solve("problems/example_11.txt", 20, true);
+}
+
+fn example2() anyerror!usize {
+    return solve("problems/example_11.txt", 10000, false);
 }
 
 fn part1() anyerror!usize {
-    return solve("problems/problem_11.txt");
+    return solve("problems/problem_11.txt", 20, true);
+}
+
+fn part2() anyerror!usize {
+    return solve("problems/problem_11.txt", 10000, false);
 }
 
 test "example1" {
@@ -151,7 +198,17 @@ test "example1" {
     try std.testing.expectEqual(@as(usize, 10605), ans);
 }
 
+// test "example2" {
+//     const ans = try example2();
+//     try std.testing.expectEqual(@as(usize, 2713310158), ans);
+// }
+
 test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(usize, 102399), ans);
 }
+
+// test "part2" {
+//     const ans = try part2();
+//     try std.testing.expectEqual(@as(usize, 102399), ans);
+// }
