@@ -77,20 +77,13 @@ fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anye
     }
 
     var i: usize = 0;
-    std.debug.print("\n", .{});
     while (i < nrounds) : (i += 1) {
-        std.debug.print("{}/{}\r", .{ i + 1, nrounds });
         var j: usize = 0;
         while (j < monkeys.items.len) : (j += 1) {
             var monkey = &monkeys.items[j];
             while (monkey.*.items.popOrNull()) |item| {
                 monkey.*.inspect_cnt += 1;
                 var val = item;
-                // {
-                //     var val_str = try val.toString(allocator, 10, std.fmt.Case.lower);
-                //     defer allocator.free(val_str);
-                //     std.debug.print("{s}\n", .{val_str});
-                // }
                 switch (monkey.*.op) {
                     Monkey.Op.ADD => {
                         val += monkey.*.op_val.?;
@@ -115,7 +108,6 @@ fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anye
             }
         }
     }
-    std.debug.print("\n", .{});
 }
 
 fn printMonkeys(monkeys: *std.ArrayList(Monkey)) void {
@@ -191,5 +183,5 @@ test "part1" {
 
 test "part2" {
     const ans = try part2();
-    try std.testing.expectEqual(@as(usize, 102399), ans);
+    try std.testing.expectEqual(@as(usize, 23641658401), ans);
 }
