@@ -68,6 +68,14 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
 }
 
 fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anyerror!void {
+    var super_modulo: u64 = 1;
+    {
+        var j: usize = 0;
+        while (j < monkeys.items.len) : (j += 1) {
+            super_modulo *= monkeys.items[j].test_quotient;
+        }
+    }
+
     var i: usize = 0;
     std.debug.print("\n", .{});
     while (i < nrounds) : (i += 1) {
@@ -96,6 +104,8 @@ fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anye
                 }
                 if (do_div) {
                     val /= 3;
+                } else {
+                    val %= super_modulo;
                 }
                 if (val % monkey.*.test_quotient == 0) {
                     try monkeys.items[monkey.*.true_target].items.insert(0, val);
@@ -169,17 +179,17 @@ test "example1" {
     try std.testing.expectEqual(@as(usize, 10605), ans);
 }
 
-// test "example2" {
-//     const ans = try example2();
-//     try std.testing.expectEqual(@as(usize, 2713310158), ans);
-// }
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(usize, 2713310158), ans);
+}
 
 test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(usize, 102399), ans);
 }
 
-// test "part2" {
-//     const ans = try part2();
-//     try std.testing.expectEqual(@as(usize, 102399), ans);
-// }
+test "part2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(usize, 102399), ans);
+}
