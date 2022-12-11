@@ -8,7 +8,7 @@ const Monkey = struct {
         SQR,
     };
 
-    items: std.ArrayList(std.math.big.int.Managed),
+    items: std.ArrayList(u64),
     op: Op = Monkey.Op.ADD,
     op_val: ?u64 = null,
     test_quotient: u64 = 1,
@@ -17,10 +17,6 @@ const Monkey = struct {
     inspect_cnt: usize = 0,
 
     pub fn deinit(self: *Monkey) void {
-        var i: usize = 0;
-        while (i < self.items.items.len) : (i += 1) {
-            self.items.items[i].deinit();
-        }
         self.items.deinit();
     }
 };
@@ -34,7 +30,7 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
     var blocks = std.mem.split(u8, buf, "\n\n");
     while (blocks.next()) |block| {
         var monkey = Monkey{
-            .items = std.ArrayList(std.math.big.int.Managed).init(allocator),
+            .items = std.ArrayList(u64).init(allocator),
         };
 
         var lines = std.mem.tokenize(u8, block, "\n");
@@ -42,7 +38,7 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
 
         var starting_items = std.mem.tokenize(u8, lines.next().?[18..], ", ");
         while (starting_items.next()) |item| {
-            try monkey.items.insert(0, try std.math.big.int.Managed.initSet(allocator, try std.fmt.parseInt(u64, item, 10)));
+            try monkey.items.insert(0, try std.fmt.parseInt(u64, item, 10));
         }
 
         var op_tokens = std.mem.tokenize(u8, lines.next().?[19..], " ");
@@ -72,25 +68,6 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
 }
 
 fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anyerror!void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
-
-    var rem = try std.math.big.int.Managed.init(allocator);
-    defer rem.deinit();
-
-    var zero = try std.math.big.int.Managed.initSet(allocator, 0);
-    defer zero.deinit();
-
-    var quotient = try std.math.big.int.Managed.initSet(allocator, 3);
-    defer quotient.deinit();
-
-    var test_quotient = try std.math.big.int.Managed.init(allocator);
-    defer test_quotient.deinit();
-
-    var opval = try std.math.big.int.Managed.init(allocator);
-    defer opval.deinit();
-
     var i: usize = 0;
     std.debug.print("\n", .{});
     while (i < nrounds) : (i += 1) {
@@ -108,25 +85,19 @@ fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anye
                 // }
                 switch (monkey.*.op) {
                     Monkey.Op.ADD => {
-                        try opval.set(monkey.*.op_val.?);
-                        try val.add(&val, &opval);
+                        val += monkey.*.op_val.?;
                     },
                     Monkey.Op.MUL => {
-                        try opval.set(monkey.*.op_val.?);
-                        try val.mul(&val, &opval);
+                        val *= monkey.*.op_val.?;
                     },
                     Monkey.Op.SQR => {
-                        try val.mul(&val, &val);
+                        val *= val;
                     },
                 }
                 if (do_div) {
-                    try val.divTrunc(&rem, &val, &quotient);
+                    val /= 3;
                 }
-                try test_quotient.set(monkey.*.test_quotient);
-                var temp = try val.clone();
-                defer temp.deinit();
-                try temp.divFloor(&rem, &val, &test_quotient);
-                if (rem.eq(zero)) {
+                if (val % monkey.*.test_quotient == 0) {
                     try monkeys.items[monkey.*.true_target].items.insert(0, val);
                 } else {
                     try monkeys.items[monkey.*.false_target].items.insert(0, val);
