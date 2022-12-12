@@ -52,9 +52,20 @@ fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, nco
     return grid;
 }
 
+fn procMove(height: i32, other_pos: Coord, dir: Dir, grid: Grid, visited: *std.ArrayList(Coord), moves: *std.ArrayList(Coord)) anyerror!void {
+    const other_height = grid[other_pos.x][other_pos.y];
+    const viable = switch (dir) {
+        Dir.FWD => other_height <= height + 1,
+        Dir.REV => height <= other_height + 1,
+    };
+    if (viable and !isContained(visited, other_pos)) {
+        try moves.*.append(other_pos);
+    }
+}
+
 fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: *std.ArrayList(Coord), pos: Coord, dir: Dir) anyerror!std.ArrayList(Coord) {
     var moves = std.ArrayList(Coord).init(allocator);
-    const pos_height = grid[pos.x][pos.y];
+    const height = grid[pos.x][pos.y];
 
     const xmin = if (pos.x > 0) pos.x - 1 else 0;
     const xmax = std.math.min(pos.x + 1, nrows - 1);
@@ -68,17 +79,7 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
         if (x == pos.x) {
             continue;
         }
-        const height = grid[x][y];
-        const viable = switch (dir) {
-            Dir.FWD => height <= pos_height + 1,
-            Dir.REV => pos_height <= height + 1,
-        };
-        if (viable) {
-            const other_pos = Coord{ .x = x, .y = y };
-            if (!isContained(visited, other_pos)) {
-                try moves.append(other_pos);
-            }
-        }
+        try procMove(height, Coord{ .x = x, .y = y }, dir, grid, visited, &moves);
     }
 
     x = pos.x;
@@ -87,17 +88,7 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
         if (y == pos.y) {
             continue;
         }
-        const height = grid[x][y];
-        const viable = switch (dir) {
-            Dir.FWD => height <= pos_height + 1,
-            Dir.REV => pos_height <= height + 1,
-        };
-        if (viable) {
-            const other_pos = Coord{ .x = x, .y = y };
-            if (!isContained(visited, other_pos)) {
-                try moves.append(other_pos);
-            }
-        }
+        try procMove(height, Coord{ .x = x, .y = y }, dir, grid, visited, &moves);
     }
 
     return moves;
