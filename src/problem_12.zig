@@ -107,17 +107,7 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
     return moves;
 }
 
-fn solve(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
-
-    var nrows: usize = 0;
-    var ncols: usize = 0;
-    var start = Coord{};
-    var end = Coord{};
-    const grid = try createGrid(allocator, path, &nrows, &ncols, &start, &end);
-
+fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, end: Coord) anyerror!usize {
     var path_tips = std.ArrayList(PathTip).init(allocator);
     defer path_tips.deinit();
     try path_tips.append(PathTip{ .pos = start, .len = 0 });
@@ -137,15 +127,73 @@ fn solve(path: []const u8) anyerror!usize {
             try path_tips.insert(0, PathTip{ .pos = new_pos, .len = tip.len + 1 });
         }
     }
-    unreachable;
+    return std.math.maxInt(usize);
+}
+
+fn getAllPossibleStarts(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize) anyerror!std.ArrayList(Coord) {
+    var starts = std.ArrayList(Coord).init(allocator);
+    var row: usize = 0;
+    while (row < nrows) : (row += 1) {
+        var col: usize = 0;
+        while (col < ncols) : (col += 1) {
+            if (grid[row][col] == 0) {
+                try starts.append(Coord{ .x = row, .y = col });
+            }
+        }
+    }
+    return starts;
+}
+
+fn solve1(path: []const u8) anyerror!usize {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var nrows: usize = 0;
+    var ncols: usize = 0;
+    var start = Coord{};
+    var end = Coord{};
+    const grid = try createGrid(allocator, path, &nrows, &ncols, &start, &end);
+
+    return try getShortestPath(allocator, grid, nrows, ncols, start, end);
+}
+
+fn solve2(path: []const u8) anyerror!usize {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var nrows: usize = 0;
+    var ncols: usize = 0;
+    var false_start = Coord{};
+    var end = Coord{};
+    const grid = try createGrid(allocator, path, &nrows, &ncols, &false_start, &end);
+
+    var starts = try getAllPossibleStarts(allocator, grid, nrows, ncols);
+    defer starts.deinit();
+
+    var shortest_path: usize = std.math.maxInt(usize);
+    while (starts.popOrNull()) |start| {
+        const this_shortest_path = try getShortestPath(allocator, grid, nrows, ncols, start, end);
+        shortest_path = std.math.min(shortest_path, this_shortest_path);
+    }
+    return shortest_path;
 }
 
 fn example1() anyerror!usize {
-    return solve("problems/example_12.txt");
+    return solve1("problems/example_12.txt");
+}
+
+fn example2() anyerror!usize {
+    return solve2("problems/example_12.txt");
 }
 
 fn part1() anyerror!usize {
-    return solve("problems/problem_12.txt");
+    return solve1("problems/problem_12.txt");
+}
+
+fn part2() anyerror!usize {
+    return solve2("problems/problem_12.txt");
 }
 
 test "example1" {
@@ -153,7 +201,17 @@ test "example1" {
     try std.testing.expectEqual(@as(usize, 31), ans);
 }
 
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(usize, 29), ans);
+}
+
 test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(usize, 528), ans);
+}
+
+test "part2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(usize, 522), ans);
 }
