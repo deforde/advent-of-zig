@@ -13,7 +13,7 @@ const PathTip = struct {
     len: usize = 0,
 };
 
-const VisitationMap = std.AutoHashMap(Coord, usize);
+const Dir = enum { FWD, REV };
 
 fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, ncols: *usize, start: *Coord, end: *Coord) anyerror!Grid {
     const buf = try readFileIntoBuf(allocator, path);
@@ -52,7 +52,7 @@ fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, nco
     return grid;
 }
 
-fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: *VisitationMap, pos: Coord, path_len: usize) anyerror!std.ArrayList(Coord) {
+fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: *std.ArrayList(Coord), pos: Coord, dir: Dir) anyerror!std.ArrayList(Coord) {
     var moves = std.ArrayList(Coord).init(allocator);
     const pos_height = grid[pos.x][pos.y];
 
@@ -69,10 +69,14 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
             continue;
         }
         const height = grid[x][y];
-        if (height <= pos_height + 1) {
-            const was_visited = try wasVisitedOnShorterPath(visited, Coord{ .x = x, .y = y }, path_len + 1);
-            if (!was_visited) {
-                try moves.append(Coord{ .x = x, .y = y });
+        const viable = switch (dir) {
+            Dir.FWD => height <= pos_height + 1,
+            Dir.REV => pos_height <= height + 1,
+        };
+        if (viable) {
+            const other_pos = Coord{ .x = x, .y = y };
+            if (!isContained(visited, other_pos)) {
+                try moves.append(other_pos);
             }
         }
     }
@@ -84,10 +88,14 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
             continue;
         }
         const height = grid[x][y];
-        if (height <= pos_height + 1) {
-            const was_visited = try wasVisitedOnShorterPath(visited, Coord{ .x = x, .y = y }, path_len + 1);
-            if (!was_visited) {
-                try moves.append(Coord{ .x = x, .y = y });
+        const viable = switch (dir) {
+            Dir.FWD => height <= pos_height + 1,
+            Dir.REV => pos_height <= height + 1,
+        };
+        if (viable) {
+            const other_pos = Coord{ .x = x, .y = y };
+            if (!isContained(visited, other_pos)) {
+                try moves.append(other_pos);
             }
         }
     }
@@ -95,38 +103,35 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
     return moves;
 }
 
-fn wasVisitedOnShorterPath(visited: *VisitationMap, pos: Coord, len: usize) anyerror!bool {
-    var visit = visited.*.getPtr(pos);
-    if (visit != null) {
-        if (visit.?.* <= len) {
+fn isContained(list: *std.ArrayList(Coord), pos: Coord) bool {
+    var i: usize = 0;
+    while (i < list.items.len) : (i += 1) {
+        if (pos.x == list.items[i].x and pos.y == list.items[i].y) {
             return true;
         }
-        visit.?.* = len;
-        return false;
     }
-    try visited.*.put(pos, len);
     return false;
 }
 
-fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, end: Coord, visited: *VisitationMap) anyerror!usize {
+fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, ends: *std.ArrayList(Coord), visited: *std.ArrayList(Coord), dir: Dir) anyerror!usize {
     var path_tips = std.ArrayList(PathTip).init(allocator);
     defer path_tips.deinit();
     try path_tips.append(PathTip{ .pos = start, .len = 0 });
 
-    if (try wasVisitedOnShorterPath(visited, start, 0)) {
-        return std.math.maxInt(usize);
-    }
+    try visited.append(start);
 
     while (path_tips.popOrNull()) |tip| {
-        var moves = try getViableMoves(allocator, grid, nrows, ncols, visited, tip.pos, tip.len);
+        var moves = try getViableMoves(allocator, grid, nrows, ncols, visited, tip.pos, dir);
         defer moves.deinit();
         while (moves.popOrNull()) |new_pos| {
-            if (new_pos.x == end.x and new_pos.y == end.y) {
+            if (isContained(ends, new_pos)) {
                 return tip.len + 1;
             }
+            try visited.append(new_pos);
             try path_tips.insert(0, PathTip{ .pos = new_pos, .len = tip.len + 1 });
         }
     }
+
     return std.math.maxInt(usize);
 }
 
@@ -155,10 +160,14 @@ fn solve1(path: []const u8) anyerror!usize {
     var end = Coord{};
     const grid = try createGrid(allocator, path, &nrows, &ncols, &start, &end);
 
-    var visited = VisitationMap.init(allocator);
+    var visited = std.ArrayList(Coord).init(allocator);
     defer visited.deinit();
 
-    return try getShortestPath(allocator, grid, nrows, ncols, start, end, &visited);
+    var ends = std.ArrayList(Coord).init(allocator);
+    defer ends.deinit();
+    try ends.append(end);
+
+    return try getShortestPath(allocator, grid, nrows, ncols, start, &ends, &visited, Dir.FWD);
 }
 
 fn solve2(path: []const u8) anyerror!usize {
@@ -168,22 +177,17 @@ fn solve2(path: []const u8) anyerror!usize {
 
     var nrows: usize = 0;
     var ncols: usize = 0;
-    var false_start = Coord{};
+    var start = Coord{};
     var end = Coord{};
-    const grid = try createGrid(allocator, path, &nrows, &ncols, &false_start, &end);
+    const grid = try createGrid(allocator, path, &nrows, &ncols, &start, &end);
+
+    var visited = std.ArrayList(Coord).init(allocator);
+    defer visited.deinit();
 
     var starts = try getAllPossibleStarts(allocator, grid, nrows, ncols);
     defer starts.deinit();
 
-    var visited = VisitationMap.init(allocator);
-    defer visited.deinit();
-
-    var shortest_path: usize = std.math.maxInt(usize);
-    while (starts.popOrNull()) |start| {
-        const this_shortest_path = try getShortestPath(allocator, grid, nrows, ncols, start, end, &visited);
-        shortest_path = std.math.min(shortest_path, this_shortest_path);
-    }
-    return shortest_path;
+    return try getShortestPath(allocator, grid, nrows, ncols, end, &starts, &visited, Dir.REV);
 }
 
 fn example1() anyerror!usize {
