@@ -13,6 +13,8 @@ const PathTip = struct {
     len: usize = 0,
 };
 
+const ShortestVisit = PathTip;
+
 fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, ncols: *usize, start: *Coord, end: *Coord) anyerror!Grid {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
@@ -50,7 +52,7 @@ fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, nco
     return grid;
 }
 
-fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: *const std.ArrayList(Coord), pos: Coord) anyerror!std.ArrayList(Coord) {
+fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: *std.ArrayList(ShortestVisit), pos: Coord, path_len: usize) anyerror!std.ArrayList(Coord) {
     var moves = std.ArrayList(Coord).init(allocator);
     const pos_height = grid[pos.x][pos.y];
 
@@ -68,14 +70,7 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
         }
         const height = grid[x][y];
         if (height <= pos_height + 1) {
-            var was_visited = false;
-            var i: usize = 0;
-            while (i < visited.items.len) : (i += 1) {
-                if (x == visited.items[i].x and y == visited.items[i].y) {
-                    was_visited = true;
-                    break;
-                }
-            }
+            const was_visited = wasVisitedOnShorterPath(visited, Coord{ .x = x, .y = y }, path_len + 1);
             if (!was_visited) {
                 try moves.append(Coord{ .x = x, .y = y });
             }
@@ -90,14 +85,7 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
         }
         const height = grid[x][y];
         if (height <= pos_height + 1) {
-            var was_visited = false;
-            var i: usize = 0;
-            while (i < visited.items.len) : (i += 1) {
-                if (x == visited.items[i].x and y == visited.items[i].y) {
-                    was_visited = true;
-                    break;
-                }
-            }
+            const was_visited = wasVisitedOnShorterPath(visited, Coord{ .x = x, .y = y }, path_len + 1);
             if (!was_visited) {
                 try moves.append(Coord{ .x = x, .y = y });
             }
@@ -107,23 +95,50 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
     return moves;
 }
 
-fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, end: Coord) anyerror!usize {
+fn wasVisitedOnShorterPath(visited: *std.ArrayList(ShortestVisit), pos: Coord, len: usize) bool {
+    var i: usize = 0;
+    while (i < visited.items.len) : (i += 1) {
+        if (pos.x == visited.items[i].pos.x and pos.y == visited.items[i].pos.y) {
+            if (len >= visited.items[i].len) {
+                return true;
+            }
+            visited.items[i].len = len;
+            return false;
+        }
+    }
+    return false;
+}
+
+fn addVisited(visited: *std.ArrayList(ShortestVisit), pos: Coord, len: usize) anyerror!void {
+    var i: usize = 0;
+    while (i < visited.items.len) : (i += 1) {
+        if (pos.x == visited.items[i].pos.x and pos.y == visited.items[i].pos.y) {
+            std.debug.assert(len <= visited.items[i].len);
+            visited.items[i].len = len;
+            return;
+        }
+    }
+    try visited.append(ShortestVisit{ .pos = pos, .len = len });
+}
+
+fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, end: Coord, visited: *std.ArrayList(ShortestVisit)) anyerror!usize {
     var path_tips = std.ArrayList(PathTip).init(allocator);
     defer path_tips.deinit();
     try path_tips.append(PathTip{ .pos = start, .len = 0 });
 
-    var visited = std.ArrayList(Coord).init(allocator);
-    defer visited.deinit();
-    try visited.append(start);
+    if (wasVisitedOnShorterPath(visited, start, 0)) {
+        return std.math.maxInt(usize);
+    }
+    try addVisited(visited, start, 0);
 
     while (path_tips.popOrNull()) |tip| {
-        var moves = try getViableMoves(allocator, grid, nrows, ncols, &visited, tip.pos);
+        var moves = try getViableMoves(allocator, grid, nrows, ncols, visited, tip.pos, tip.len);
         defer moves.deinit();
         while (moves.popOrNull()) |new_pos| {
             if (new_pos.x == end.x and new_pos.y == end.y) {
                 return tip.len + 1;
             }
-            try visited.append(new_pos);
+            try addVisited(visited, new_pos, tip.len + 1);
             try path_tips.insert(0, PathTip{ .pos = new_pos, .len = tip.len + 1 });
         }
     }
@@ -155,7 +170,10 @@ fn solve1(path: []const u8) anyerror!usize {
     var end = Coord{};
     const grid = try createGrid(allocator, path, &nrows, &ncols, &start, &end);
 
-    return try getShortestPath(allocator, grid, nrows, ncols, start, end);
+    var visited = std.ArrayList(ShortestVisit).init(allocator);
+    defer visited.deinit();
+
+    return try getShortestPath(allocator, grid, nrows, ncols, start, end, &visited);
 }
 
 fn solve2(path: []const u8) anyerror!usize {
@@ -172,9 +190,12 @@ fn solve2(path: []const u8) anyerror!usize {
     var starts = try getAllPossibleStarts(allocator, grid, nrows, ncols);
     defer starts.deinit();
 
+    var visited = std.ArrayList(ShortestVisit).init(allocator);
+    defer visited.deinit();
+
     var shortest_path: usize = std.math.maxInt(usize);
     while (starts.popOrNull()) |start| {
-        const this_shortest_path = try getShortestPath(allocator, grid, nrows, ncols, start, end);
+        const this_shortest_path = try getShortestPath(allocator, grid, nrows, ncols, start, end, &visited);
         shortest_path = std.math.min(shortest_path, this_shortest_path);
     }
     return shortest_path;
