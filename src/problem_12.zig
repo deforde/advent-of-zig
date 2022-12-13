@@ -1,7 +1,7 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
-const Grid = [41][181]i32;
+const Grid = [41][181]u8;
 
 const Coord = struct {
     x: usize = 0,
@@ -28,7 +28,7 @@ fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, nco
     while (lines.next()) |line| {
         var col: usize = 0;
         for (line) |char| {
-            var height: i32 = 0;
+            var height: u8 = 0;
             switch (char) {
                 'S' => {
                     start.* = Coord{ .x = row, .y = col };
@@ -52,18 +52,18 @@ fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, nco
     return grid;
 }
 
-fn procMove(height: i32, other_pos: Coord, dir: Dir, grid: Grid, visited: *std.ArrayList(Coord), moves: *std.ArrayList(Coord)) anyerror!void {
+fn procMove(height: i32, other_pos: Coord, dir: Dir, grid: Grid, visited: Grid, moves: *std.ArrayList(Coord)) anyerror!void {
     const other_height = grid[other_pos.x][other_pos.y];
     const viable = switch (dir) {
         Dir.FWD => other_height <= height + 1,
         Dir.REV => height <= other_height + 1,
     };
-    if (viable and !isContained(visited, other_pos)) {
+    if (viable and visited[other_pos.x][other_pos.y] != 1) {
         try moves.*.append(other_pos);
     }
 }
 
-fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: *std.ArrayList(Coord), pos: Coord, dir: Dir) anyerror!std.ArrayList(Coord) {
+fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: Grid, pos: Coord, dir: Dir) anyerror!std.ArrayList(Coord) {
     var moves = std.ArrayList(Coord).init(allocator);
     const height = grid[pos.x][pos.y];
 
@@ -104,21 +104,21 @@ fn isContained(list: *std.ArrayList(Coord), pos: Coord) bool {
     return false;
 }
 
-fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, ends: *std.ArrayList(Coord), visited: *std.ArrayList(Coord), dir: Dir) anyerror!usize {
+fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, ends: Grid, visited: *Grid, dir: Dir) anyerror!usize {
     var path_tips = std.ArrayList(PathTip).init(allocator);
     defer path_tips.deinit();
     try path_tips.append(PathTip{ .pos = start, .len = 0 });
 
-    try visited.append(start);
+    visited[start.x][start.y] = 1;
 
     while (path_tips.popOrNull()) |tip| {
-        var moves = try getViableMoves(allocator, grid, nrows, ncols, visited, tip.pos, dir);
+        var moves = try getViableMoves(allocator, grid, nrows, ncols, visited.*, tip.pos, dir);
         defer moves.deinit();
         while (moves.popOrNull()) |new_pos| {
-            if (isContained(ends, new_pos)) {
+            if (ends[new_pos.x][new_pos.y] == 1) {
                 return tip.len + 1;
             }
-            try visited.append(new_pos);
+            visited[new_pos.x][new_pos.y] = 1;
             try path_tips.insert(0, PathTip{ .pos = new_pos, .len = tip.len + 1 });
         }
     }
@@ -126,14 +126,14 @@ fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols
     return std.math.maxInt(usize);
 }
 
-fn getAllPossibleStarts(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize) anyerror!std.ArrayList(Coord) {
-    var starts = std.ArrayList(Coord).init(allocator);
+fn getAllPossibleStarts(grid: Grid, nrows: usize, ncols: usize) Grid {
+    var starts = std.mem.zeroes(Grid);
     var row: usize = 0;
     while (row < nrows) : (row += 1) {
         var col: usize = 0;
         while (col < ncols) : (col += 1) {
             if (grid[row][col] == 0) {
-                try starts.append(Coord{ .x = row, .y = col });
+                starts[row][col] = 1;
             }
         }
     }
@@ -151,14 +151,12 @@ fn solve1(path: []const u8) anyerror!usize {
     var end = Coord{};
     const grid = try createGrid(allocator, path, &nrows, &ncols, &start, &end);
 
-    var visited = std.ArrayList(Coord).init(allocator);
-    defer visited.deinit();
+    var visited = std.mem.zeroes(Grid);
 
-    var ends = std.ArrayList(Coord).init(allocator);
-    defer ends.deinit();
-    try ends.append(end);
+    var ends = std.mem.zeroes(Grid);
+    ends[end.x][end.y] = 1;
 
-    return try getShortestPath(allocator, grid, nrows, ncols, start, &ends, &visited, Dir.FWD);
+    return try getShortestPath(allocator, grid, nrows, ncols, start, ends, &visited, Dir.FWD);
 }
 
 fn solve2(path: []const u8) anyerror!usize {
@@ -172,13 +170,11 @@ fn solve2(path: []const u8) anyerror!usize {
     var end = Coord{};
     const grid = try createGrid(allocator, path, &nrows, &ncols, &start, &end);
 
-    var visited = std.ArrayList(Coord).init(allocator);
-    defer visited.deinit();
+    var visited = std.mem.zeroes(Grid);
 
-    var starts = try getAllPossibleStarts(allocator, grid, nrows, ncols);
-    defer starts.deinit();
+    var starts = getAllPossibleStarts(grid, nrows, ncols);
 
-    return try getShortestPath(allocator, grid, nrows, ncols, end, &starts, &visited, Dir.REV);
+    return try getShortestPath(allocator, grid, nrows, ncols, end, starts, &visited, Dir.REV);
 }
 
 fn example1() anyerror!usize {

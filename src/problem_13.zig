@@ -154,10 +154,8 @@ fn sortPackets(allocator: std.mem.Allocator, packets: *std.ArrayList(Node)) anye
             var r = packets.items[i + 1];
             const sorted = try compareNodes(allocator, &l, &r) == 1;
             if (!sorted) {
-                var p = packets.items[i];
-                var q = packets.items[i + 1];
-                packets.items[i] = q;
-                packets.items[i + 1] = p;
+                packets.items[i] = r;
+                packets.items[i + 1] = l;
                 change_made = true;
             }
         }
@@ -185,7 +183,7 @@ fn solve1(path: []const u8) anyerror!usize {
         defer q.deinit();
 
         const res = try compareNodes(allocator, &p, &q);
-        std.debug.assert(res == 1 or res == -1);
+        std.debug.assert(res != 0);
         if (res == 1) {
             sum += idx;
         }
