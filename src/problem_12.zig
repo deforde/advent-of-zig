@@ -94,16 +94,6 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
     return moves;
 }
 
-fn isContained(list: *std.ArrayList(Coord), pos: Coord) bool {
-    var i: usize = 0;
-    while (i < list.items.len) : (i += 1) {
-        if (pos.x == list.items[i].x and pos.y == list.items[i].y) {
-            return true;
-        }
-    }
-    return false;
-}
-
 fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, ends: Grid, visited: *Grid, dir: Dir) anyerror!usize {
     var path_tips = std.ArrayList(PathTip).init(allocator);
     defer path_tips.deinit();
