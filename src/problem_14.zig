@@ -8,20 +8,15 @@ const Coord = struct {
 
 const Map = std.AutoHashMap(Coord, u8);
 
-fn solve(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
-
+fn createMap(allocator: std.mem.Allocator, path: []const u8, xmin: *isize, xmax: *isize, ymax: *isize) anyerror!Map {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
     var map = Map.init(allocator);
-    defer map.deinit();
 
-    var xmin: isize = std.math.maxInt(isize);
-    var xmax: isize = 0;
-    var ymax: isize = 0;
+    xmin.* = std.math.maxInt(isize);
+    xmax.* = 0;
+    ymax.* = 0;
 
     var lines = std.mem.tokenize(u8, buf, "\n");
     while (lines.next()) |line| {
@@ -33,9 +28,9 @@ fn solve(path: []const u8) anyerror!usize {
             var elems = std.mem.tokenize(u8, coord, ",");
             const x = try std.fmt.parseInt(isize, elems.next().?, 10);
             const y = try std.fmt.parseInt(isize, elems.next().?, 10);
-            xmin = std.math.min(xmin, x);
-            xmax = std.math.max(xmax, x);
-            ymax = std.math.max(ymax, y);
+            xmin.* = std.math.min(xmin.*, x);
+            xmax.* = std.math.max(xmax.*, x);
+            ymax.* = std.math.max(ymax.*, y);
             try geo.append(Coord{ .x = x, .y = y });
         }
 
@@ -53,7 +48,6 @@ fn solve(path: []const u8) anyerror!usize {
             }
             var cur = start;
             while (cur.x != end.x or cur.y != end.y) {
-                // std.debug.print("{}, {}\n", .{ cur.x, cur.y });
                 try map.put(cur, 0);
                 cur.x += dx;
                 cur.y += dy;
@@ -61,6 +55,20 @@ fn solve(path: []const u8) anyerror!usize {
             try map.put(end, 0);
         }
     }
+
+    return map;
+}
+
+fn solve1(path: []const u8) anyerror!usize {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var xmin: isize = 0;
+    var xmax: isize = 0;
+    var ymax: isize = 0;
+    var map = try createMap(allocator, path, &xmin, &xmax, &ymax);
+    defer map.deinit();
 
     const sand_origin = Coord{ .x = 500, .y = 0 };
     var rst_cnt: usize = 0;
@@ -81,7 +89,6 @@ fn solve(path: []const u8) anyerror!usize {
                 }
             }
             if (!moved) {
-                // std.debug.print("{}, {}\n", .{ grain.x, grain.y });
                 try map.put(grain, 0);
                 rst_cnt += 1;
                 break;
@@ -96,12 +103,63 @@ fn solve(path: []const u8) anyerror!usize {
     return rst_cnt;
 }
 
+fn solve2(path: []const u8) anyerror!usize {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var xmin: isize = 0;
+    var xmax: isize = 0;
+    var ymax: isize = 0;
+    var map = try createMap(allocator, path, &xmin, &xmax, &ymax);
+    defer map.deinit();
+
+    const yfloor: isize = ymax + 2;
+
+    const sand_origin = Coord{ .x = 500, .y = 0 };
+    var rst_cnt: usize = 0;
+    var done = false;
+    while (!done) {
+        var grain = sand_origin;
+        while (true) {
+            var next_pos: [3]Coord = undefined;
+            next_pos[0] = Coord{ .x = grain.x, .y = grain.y + 1 };
+            next_pos[1] = Coord{ .x = grain.x - 1, .y = grain.y + 1 };
+            next_pos[2] = Coord{ .x = grain.x + 1, .y = grain.y + 1 };
+            var moved = false;
+            for (next_pos) |pos| {
+                if (map.get(pos) == null) {
+                    moved = true;
+                    grain = pos;
+                    break;
+                }
+            }
+            if (!moved or grain.y == yfloor - 1) {
+                try map.put(grain, 0);
+                rst_cnt += 1;
+                done = grain.x == sand_origin.x and grain.y == sand_origin.y;
+                break;
+            }
+        }
+    }
+
+    return rst_cnt;
+}
+
 fn example1() anyerror!usize {
-    return solve("problems/example_14.txt");
+    return solve1("problems/example_14.txt");
+}
+
+fn example2() anyerror!usize {
+    return solve2("problems/example_14.txt");
 }
 
 fn part1() anyerror!usize {
-    return solve("problems/problem_14.txt");
+    return solve1("problems/problem_14.txt");
+}
+
+fn part2() anyerror!usize {
+    return solve2("problems/problem_14.txt");
 }
 
 test "example1" {
@@ -109,7 +167,17 @@ test "example1" {
     try std.testing.expectEqual(@as(usize, 24), ans);
 }
 
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(usize, 93), ans);
+}
+
 test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(usize, 1016), ans);
+}
+
+test "part2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(usize, 25402), ans);
 }
