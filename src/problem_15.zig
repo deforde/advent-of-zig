@@ -13,7 +13,7 @@ const Range = struct {
     fn merge(a: Range, b: Range) ?Range {
         const strt_max = std.math.max(a.strt, b.strt);
         const end_min = std.math.min(a.end, b.end);
-        if (end_min >= strt_max) {
+        if (strt_max <= end_min + 1) {
             return Range{
                 .strt = std.math.min(a.strt, b.strt),
                 .end = std.math.max(a.end, b.end),
@@ -143,8 +143,8 @@ fn solve2(path: []const u8, xmax: i64, ymax: i64) anyerror!usize {
     var ranges = std.ArrayList(Range).init(allocator);
     defer ranges.deinit();
 
-    var y: i64 = 0;
-    while (y <= ymax) : (y += 1) {
+    var y: i64 = ymax;
+    while (y >= 0) : (y -= 1) {
         try getRanges(&ranges, allocator, &sbpairs, y);
         if (ranges.items.len > 1 or ranges.items[0].strt > 0 or ranges.items[0].end < xmax) {
             for (ranges.items) |range| {
