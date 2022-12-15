@@ -116,13 +116,6 @@ fn getRanges(ranges: *std.ArrayList(Range), allocator: std.mem.Allocator, sbpair
     }
 }
 
-fn clampRanges(ranges: *std.ArrayList(Range), min: i64, max: i64) void {
-    for (ranges.items) |*range| {
-        range.strt = std.math.max(range.strt, min);
-        range.end = std.math.min(range.end, max);
-    }
-}
-
 fn solve1(path: []const u8, y: i64) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -153,9 +146,7 @@ fn solve2(path: []const u8, xmax: i64, ymax: i64) anyerror!usize {
     var y: i64 = 0;
     while (y <= ymax) : (y += 1) {
         try getRanges(&ranges, allocator, &sbpairs, y);
-        clampRanges(&ranges, 0, xmax);
-        const sum = sumRanges(&ranges);
-        if (sum < xmax) {
+        if (ranges.items.len > 1 or ranges.items[0].strt > 0 or ranges.items[0].end < xmax) {
             for (ranges.items) |range| {
                 if (range.strt > 0) {
                     return @intCast(usize, 4000000 * (range.strt - 1) + y);
