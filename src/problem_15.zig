@@ -149,8 +149,8 @@ fn solve2(path: []const u8, xmax: i64, ymax: i64) anyerror!usize {
     defer sbpairs.deinit();
 
     // std.debug.print("\n", .{});
-    var y: i64 = 0;
-    while (y <= ymax) : (y += 1) {
+    var y: i64 = ymax;
+    while (y >= 0) : (y -= 1) {
         // std.debug.print("{}/{}\r", .{ y + 1, ymax + 1 });
         var ranges = try getRanges(allocator, &sbpairs, y);
         defer ranges.deinit();
