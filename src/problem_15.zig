@@ -98,8 +98,8 @@ fn sumRanges(ranges: *std.ArrayList(Range)) i64 {
     return sum;
 }
 
-fn getRanges(allocator: std.mem.Allocator, sbpairs: *std.ArrayList(SBPair), y: i64) anyerror!std.ArrayList(Range) {
-    var ranges = std.ArrayList(Range).init(allocator);
+fn getRanges(ranges: *std.ArrayList(Range), allocator: std.mem.Allocator, sbpairs: *std.ArrayList(SBPair), y: i64) anyerror!void {
+    ranges.clearRetainingCapacity();
 
     for (sbpairs.items) |sbpair| {
         const d = sbpair.d.? - try std.math.absInt(sbpair.s.y - y);
@@ -112,10 +112,15 @@ fn getRanges(allocator: std.mem.Allocator, sbpairs: *std.ArrayList(SBPair), y: i
             .strt = xmin,
             .end = xmax,
         };
-        try addToRanges(allocator, &ranges, r);
+        try addToRanges(allocator, ranges, r);
     }
+}
 
-    return ranges;
+fn clampRanges(ranges: *std.ArrayList(Range), min: i64, max: i64) void {
+    for (ranges.items) |*range| {
+        range.strt = std.math.max(range.strt, min);
+        range.end = std.math.min(range.end, max);
+    }
 }
 
 fn solve1(path: []const u8, y: i64) anyerror!usize {
@@ -126,8 +131,9 @@ fn solve1(path: []const u8, y: i64) anyerror!usize {
     var sbpairs = try getSBPairs(allocator, path);
     defer sbpairs.deinit();
 
-    var ranges = try getRanges(allocator, &sbpairs, y);
+    var ranges = std.ArrayList(Range).init(allocator);
     defer ranges.deinit();
+    try getRanges(&ranges, allocator, &sbpairs, y);
 
     const ans: usize = @intCast(usize, sumRanges(&ranges));
     return ans;
@@ -141,26 +147,25 @@ fn solve2(path: []const u8, xmax: i64, ymax: i64) anyerror!usize {
     var sbpairs = try getSBPairs(allocator, path);
     defer sbpairs.deinit();
 
-    // std.debug.print("\n", .{});
-    var y: i64 = ymax;
-    while (y >= 0) : (y -= 1) {
-        // std.debug.print("{}/{}\r", .{ y + 1, ymax + 1 });
-        var ranges = try getRanges(allocator, &sbpairs, y);
-        defer ranges.deinit();
-        if (ranges.items.len > 1 or ranges.items[0].strt > 0 or ranges.items[0].end < xmax) {
+    var ranges = std.ArrayList(Range).init(allocator);
+    defer ranges.deinit();
+
+    var y: i64 = 0;
+    while (y <= ymax) : (y += 1) {
+        try getRanges(&ranges, allocator, &sbpairs, y);
+        clampRanges(&ranges, 0, xmax);
+        const sum = sumRanges(&ranges);
+        if (sum < xmax) {
             for (ranges.items) |range| {
                 if (range.strt > 0) {
-                    // std.debug.print("\n{}, {}\n", .{ (range.strt - 1), y });
                     return @intCast(usize, 4000000 * (range.strt - 1) + y);
                 } else if (range.end < xmax) {
-                    // std.debug.print("\n{}, {}\n", .{ (range.end + 1), y });
                     return @intCast(usize, 4000000 * (range.end + 1) + y);
                 }
             }
             unreachable;
         }
     }
-    // std.debug.print("\n", .{});
 
     unreachable;
 }
