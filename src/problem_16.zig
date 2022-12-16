@@ -11,6 +11,11 @@ const PathTip = struct {
     dist: i64,
 };
 
+const Path = struct {
+    nodes: std.ArrayList(i64),
+    press: i64,
+};
+
 const NodeMap = std.AutoHashMap(i64, Node);
 const NodeDistMap = std.AutoHashMap(i64, std.AutoHashMap(i64, i64));
 
@@ -124,29 +129,74 @@ fn printDistMap(dist_map: *NodeDistMap) void {
     }
 }
 
-fn getMaxPressPathInner(map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.ArrayList(i64), src: i64, p: i64, mins_remaining: i64) anyerror!i64 {
+fn getMaxPressPathInner(map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.ArrayList(i64), src: i64, p: i64, mins_remaining: i64, path: *std.ArrayList(i64), paths: *std.ArrayList(Path)) anyerror!i64 {
     var max_p: i64 = p;
     for (dst_nodes.items) |dst, i| {
         var dup = try dst_nodes.clone();
         defer dup.deinit();
         _ = dup.swapRemove(i);
+
         const dist = dist_map.get(src).?.get(dst).?;
         var nmr = mins_remaining - dist - 1;
         if (nmr < 1) {
             continue;
         }
+
         var np = p + map.get(dst).?.flow_rate * nmr;
-        var nmp = try getMaxPressPathInner(map, dist_map, &dup, dst, np, nmr);
+
+        var npath = try path.clone();
+        defer npath.deinit();
+        try npath.append(dst);
+        try updatePath(paths, &npath, np);
+
+        var nmp = try getMaxPressPathInner(map, dist_map, &dup, dst, np, nmr, &npath, paths);
         max_p = std.math.max(nmp, max_p);
     }
     return max_p;
 }
 
-fn getMaxPressPath(map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.ArrayList(i64)) anyerror!i64 {
-    return getMaxPressPathInner(map, dist_map, dst_nodes, nodeNameToId("AA"), 0, 30);
+fn arePathsUnique(p1: *std.ArrayList(i64), p2: *std.ArrayList(i64)) bool {
+    for (p1.items[1..]) |x| {
+        for (p2.items[1..]) |y| {
+            if (x == y) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
-fn solve(path: []const u8) anyerror!usize {
+fn updatePath(paths: *std.ArrayList(Path), npath: *std.ArrayList(i64), press: i64) anyerror!void {
+    for (paths.items) |*path| {
+        var path_match = true;
+        if (path.nodes.items.len != npath.items.len) {
+            path_match = false;
+        } else {
+            for (npath.items) |node| {
+                if (!isContained(&path.nodes, node)) {
+                    path_match = false;
+                    break;
+                }
+            }
+        }
+        if (path_match) {
+            if (press > path.press) {
+                path.press = press;
+            }
+            return;
+        }
+    }
+    try paths.append(Path{ .nodes = try npath.clone(), .press = press });
+}
+
+fn getMaxPressPath(allocator: std.mem.Allocator, map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.ArrayList(i64), paths: *std.ArrayList(Path), maxt: i64) anyerror!i64 {
+    var path = std.ArrayList(i64).init(allocator);
+    defer path.deinit();
+    try path.append(nodeNameToId("AA"));
+    return getMaxPressPathInner(map, dist_map, dst_nodes, nodeNameToId("AA"), 0, maxt, &path, paths);
+}
+
+fn solve1(path: []const u8) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer std.debug.assert(!gpa.deinit());
@@ -190,27 +240,137 @@ fn solve(path: []const u8) anyerror!usize {
     // }
     // std.debug.print("\n", .{});
 
-    var p = try getMaxPressPath(&map, &dist_map, &non_zero_fr);
+    var paths = std.ArrayList(Path).init(allocator);
+    defer {
+        for (paths.items) |*p| {
+            p.nodes.deinit();
+        }
+        paths.deinit();
+    }
+
+    var p = try getMaxPressPath(allocator, &map, &dist_map, &non_zero_fr, &paths, 30);
     // std.debug.print("{}\n", .{p});
 
     const ans: usize = @intCast(usize, p);
     return ans;
 }
 
+fn solve2(path: []const u8) anyerror!usize {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var map = try genNodeMap(allocator, path);
+    defer {
+        var it = map.iterator();
+        while (it.next()) |node| {
+            node.value_ptr.connections.deinit();
+        }
+        map.deinit();
+    }
+
+    // printNodeMap(&map);
+
+    var non_zero_fr = std.ArrayList(i64).init(allocator);
+    defer non_zero_fr.deinit();
+    {
+        var it = map.iterator();
+        while (it.next()) |node| {
+            if (node.value_ptr.flow_rate != 0) {
+                try non_zero_fr.append(node.key_ptr.*);
+            }
+        }
+    }
+
+    var dist_map = try genNodeDistMap(allocator, &map);
+    defer {
+        var it = dist_map.iterator();
+        while (it.next()) |node| {
+            node.value_ptr.deinit();
+        }
+        dist_map.deinit();
+    }
+    // std.debug.print("\n", .{});
+    // printDistMap(&dist_map);
+
+    // std.debug.print("\n", .{});
+    // for (non_zero_fr.items) |n| {
+    //     std.debug.print("{s} ", .{nodeIdToName(n)});
+    // }
+    // std.debug.print("\n", .{});
+
+    var paths = std.ArrayList(Path).init(allocator);
+    defer {
+        for (paths.items) |*p| {
+            p.nodes.deinit();
+        }
+        paths.deinit();
+    }
+    _ = try getMaxPressPath(allocator, &map, &dist_map, &non_zero_fr, &paths, 26);
+    // std.debug.print("{}\n", .{p});
+
+    // {
+    //     for (paths.items) |*pt| {
+    //         std.debug.print("{}: [ ", .{pt.press});
+    //         for (pt.nodes.items) |n| {
+    //             std.debug.print("{s} ", .{nodeIdToName(n)});
+    //         }
+    //         std.debug.print("]\n", .{});
+    //     }
+    // }
+
+    var max_press: i64 = 0;
+    {
+        var i: usize = 0;
+        while (i < paths.items.len - 1) : (i += 1) {
+            var j: usize = 1;
+            while (j < paths.items.len) : (j += 1) {
+                var pt1 = &paths.items[i];
+                var pt2 = &paths.items[j];
+                if (arePathsUnique(&pt1.nodes, &pt2.nodes)) {
+                    const press = pt1.press + pt2.press;
+                    max_press = std.math.max(max_press, press);
+                }
+            }
+        }
+    }
+
+    const ans: usize = @intCast(usize, max_press);
+    return ans;
+}
+
 fn example1() anyerror!usize {
-    return solve("problems/example_16.txt");
+    return solve1("problems/example_16.txt");
+}
+
+fn example2() anyerror!usize {
+    return solve2("problems/example_16.txt");
 }
 
 fn part1() anyerror!usize {
-    return solve("problems/problem_16.txt");
+    return solve1("problems/problem_16.txt");
 }
 
-// test "example1" {
-//     const ans = try example1();
-//     try std.testing.expectEqual(@as(usize, 1651), ans);
-// }
+fn part2() anyerror!usize {
+    return solve2("problems/problem_16.txt");
+}
+
+test "example1" {
+    const ans = try example1();
+    try std.testing.expectEqual(@as(usize, 1651), ans);
+}
+
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(usize, 1707), ans);
+}
 
 test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(usize, 1659), ans);
+}
+
+test "part2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(usize, 2382), ans);
 }
