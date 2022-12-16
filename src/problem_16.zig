@@ -210,8 +210,6 @@ fn solve1(path: []const u8) anyerror!usize {
         map.deinit();
     }
 
-    // printNodeMap(&map);
-
     var non_zero_fr = std.ArrayList(i64).init(allocator);
     defer non_zero_fr.deinit();
     {
@@ -231,14 +229,6 @@ fn solve1(path: []const u8) anyerror!usize {
         }
         dist_map.deinit();
     }
-    // std.debug.print("\n", .{});
-    // printDistMap(&dist_map);
-
-    // std.debug.print("\n", .{});
-    // for (non_zero_fr.items) |n| {
-    //     std.debug.print("{s} ", .{nodeIdToName(n)});
-    // }
-    // std.debug.print("\n", .{});
 
     var paths = std.ArrayList(Path).init(allocator);
     defer {
@@ -249,7 +239,6 @@ fn solve1(path: []const u8) anyerror!usize {
     }
 
     var p = try getMaxPressPath(allocator, &map, &dist_map, &non_zero_fr, &paths, 30);
-    // std.debug.print("{}\n", .{p});
 
     const ans: usize = @intCast(usize, p);
     return ans;
@@ -269,8 +258,6 @@ fn solve2(path: []const u8) anyerror!usize {
         map.deinit();
     }
 
-    // printNodeMap(&map);
-
     var non_zero_fr = std.ArrayList(i64).init(allocator);
     defer non_zero_fr.deinit();
     {
@@ -290,14 +277,6 @@ fn solve2(path: []const u8) anyerror!usize {
         }
         dist_map.deinit();
     }
-    // std.debug.print("\n", .{});
-    // printDistMap(&dist_map);
-
-    // std.debug.print("\n", .{});
-    // for (non_zero_fr.items) |n| {
-    //     std.debug.print("{s} ", .{nodeIdToName(n)});
-    // }
-    // std.debug.print("\n", .{});
 
     var paths = std.ArrayList(Path).init(allocator);
     defer {
@@ -307,30 +286,17 @@ fn solve2(path: []const u8) anyerror!usize {
         paths.deinit();
     }
     _ = try getMaxPressPath(allocator, &map, &dist_map, &non_zero_fr, &paths, 26);
-    // std.debug.print("{}\n", .{p});
-
-    // {
-    //     for (paths.items) |*pt| {
-    //         std.debug.print("{}: [ ", .{pt.press});
-    //         for (pt.nodes.items) |n| {
-    //             std.debug.print("{s} ", .{nodeIdToName(n)});
-    //         }
-    //         std.debug.print("]\n", .{});
-    //     }
-    // }
 
     var max_press: i64 = 0;
-    {
-        var i: usize = 0;
-        while (i < paths.items.len - 1) : (i += 1) {
-            var j: usize = 1;
-            while (j < paths.items.len) : (j += 1) {
-                var pt1 = &paths.items[i];
-                var pt2 = &paths.items[j];
-                if (arePathsUnique(&pt1.nodes, &pt2.nodes)) {
-                    const press = pt1.press + pt2.press;
-                    max_press = std.math.max(max_press, press);
-                }
+    var i: usize = 0;
+    while (i < paths.items.len - 1) : (i += 1) {
+        var j: usize = 1;
+        while (j < paths.items.len) : (j += 1) {
+            var pt1 = &paths.items[i];
+            var pt2 = &paths.items[j];
+            if (arePathsUnique(&pt1.nodes, &pt2.nodes)) {
+                const press = pt1.press + pt2.press;
+                max_press = std.math.max(max_press, press);
             }
         }
     }
