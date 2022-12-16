@@ -6,6 +6,11 @@ const Node = struct {
     connections: std.ArrayList(i64),
 };
 
+const PathTip = struct {
+    id: i64,
+    dist: i64,
+};
+
 const NodeMap = std.AutoHashMap(i64, Node);
 const NodeDistMap = std.AutoHashMap(i64, std.AutoHashMap(i64, i64));
 
@@ -59,8 +64,8 @@ fn genNodeMap(allocator: std.mem.Allocator, path: []const u8) anyerror!NodeMap {
     return map;
 }
 
-fn wasVisited(visited: *std.ArrayList(i64), id: i64) bool {
-    for (visited.items) |vn| {
+fn isContained(l: *std.ArrayList(i64), id: i64) bool {
+    for (l.items) |vn| {
         if (vn == id) {
             return true;
         }
@@ -68,18 +73,18 @@ fn wasVisited(visited: *std.ArrayList(i64), id: i64) bool {
     return false;
 }
 
-fn genNodeDistMapInner(allocator: std.mem.Allocator, map: *NodeMap, dist_map: *NodeDistMap, visited: *std.ArrayList(i64), src: i64, id: i64, dist: i64) anyerror!void {
-    var to_visit = std.ArrayList(i64).init(allocator);
-    defer to_visit.deinit();
-    for (map.get(id).?.connections.items) |conn| {
-        if (!wasVisited(visited, conn)) {
-            try visited.append(conn);
-            try to_visit.append(conn);
+fn genNodeDistMapInner(dmap: *NodeDistMap, map: *NodeMap, visited: *std.ArrayList(i64), src: i64, path_tips: *std.ArrayList(PathTip)) anyerror!void {
+    while (path_tips.popOrNull()) |pt| {
+        const curn = map.get(pt.id).?;
+        for (curn.connections.items) |n| {
+            if (isContained(visited, n)) {
+                continue;
+            }
+            try visited.append(n);
+            try dmap.getPtr(src).?.put(n, pt.dist + 1);
+            // std.debug.print("  {s} {}\n", .{ nodeIdToName(n), pt.dist + 1 });
+            try path_tips.insert(0, PathTip{ .id = n, .dist = pt.dist + 1 });
         }
-    }
-    for (to_visit.items) |conn| {
-        try dist_map.getPtr(src).?.put(conn, dist + 1);
-        try genNodeDistMapInner(allocator, map, dist_map, visited, src, conn, dist + 1);
     }
 }
 
@@ -96,8 +101,13 @@ fn genNodeDistMap(allocator: std.mem.Allocator, map: *NodeMap) anyerror!NodeDist
         var visited = std.ArrayList(i64).init(allocator);
         defer visited.deinit();
         try visited.append(node.key_ptr.*);
+
+        var path_tips = std.ArrayList(PathTip).init(allocator);
+        defer path_tips.deinit();
+        try path_tips.append(PathTip{ .id = node.key_ptr.*, .dist = 0 });
+
         // std.debug.print("Getting all distances for {s}\n", .{nodeIdToName(node.key_ptr.*)});
-        try genNodeDistMapInner(allocator, map, &dist_map, &visited, node.key_ptr.*, node.key_ptr.*, 0);
+        try genNodeDistMapInner(&dist_map, map, &visited, node.key_ptr.*, &path_tips);
     }
 
     return dist_map;
@@ -152,6 +162,17 @@ fn solve(path: []const u8) anyerror!usize {
 
     // printNodeMap(&map);
 
+    var non_zero_fr = std.ArrayList(i64).init(allocator);
+    defer non_zero_fr.deinit();
+    {
+        var it = map.iterator();
+        while (it.next()) |node| {
+            if (node.value_ptr.flow_rate != 0) {
+                try non_zero_fr.append(node.key_ptr.*);
+            }
+        }
+    }
+
     var dist_map = try genNodeDistMap(allocator, &map);
     defer {
         var it = dist_map.iterator();
@@ -163,14 +184,6 @@ fn solve(path: []const u8) anyerror!usize {
     // std.debug.print("\n", .{});
     // printDistMap(&dist_map);
 
-    var non_zero_fr = std.ArrayList(i64).init(allocator);
-    defer non_zero_fr.deinit();
-    var it = map.iterator();
-    while (it.next()) |node| {
-        if (node.value_ptr.flow_rate != 0) {
-            try non_zero_fr.append(node.key_ptr.*);
-        }
-    }
     // std.debug.print("\n", .{});
     // for (non_zero_fr.items) |n| {
     //     std.debug.print("{s} ", .{nodeIdToName(n)});
@@ -199,5 +212,5 @@ fn part1() anyerror!usize {
 
 test "part1" {
     const ans = try part1();
-    try std.testing.expectEqual(@as(usize, 1076), ans);
+    try std.testing.expectEqual(@as(usize, 1659), ans);
 }
