@@ -200,6 +200,10 @@ fn example1() anyerror!usize {
     return solve("problems/example_17.txt", 2022);
 }
 
+fn example2() anyerror!usize {
+    return solve("problems/example_17.txt", 1000000000000);
+}
+
 fn part1() anyerror!usize {
     return solve("problems/problem_17.txt", 2022);
 }
@@ -207,6 +211,11 @@ fn part1() anyerror!usize {
 test "example1" {
     const ans = try example1();
     try std.testing.expectEqual(@as(usize, 3068), ans);
+}
+
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(usize, 1514285714288), ans);
 }
 
 test "part1" {
