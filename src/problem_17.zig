@@ -12,12 +12,50 @@ const Shape = std.ArrayList(Coord);
 
 const ShapeTy = enum { HORI, PLUS, JAY, VERT, SQR };
 
+const State = [9]i64;
+const StateMap = std.AutoHashMap(State, u8);
+
+fn getState(cols: *Columns, shape_ty_idx: usize, buf_idx: usize) State {
+    var state: State = undefined;
+    for (cols.items) |col, i| {
+        state[i] = col.items[col.items.len - 1];
+    }
+    const min = std.mem.min(i64, state[0..7]);
+    for (state[0..7]) |*x| {
+        x.* -= min;
+    }
+    state[7] = @intCast(i64, shape_ty_idx);
+    state[8] = @intCast(i64, buf_idx);
+    return state;
+}
+
 fn updateColumns(s: *Shape, cols: *Columns) anyerror!void {
     for (s.items) |c| {
         var col = &cols.items[@intCast(usize, c.x)];
         try col.append(c.y);
         std.sort.sort(i64, col.items, {}, comptime std.sort.asc(i64));
     }
+    const min = getColMin(cols);
+    for (cols.items) |*col| {
+        var idx: usize = col.items.len - 1;
+        while (idx > 0) : (idx -= 1) {
+            if (col.items[idx] == min) {
+                break;
+            }
+        }
+        if (idx != 0) {
+            try col.replaceRange(0, col.items.len - idx, col.items[idx..]);
+            col.shrinkRetainingCapacity(col.items.len - idx);
+        }
+    }
+}
+
+fn getColMin(cols: *Columns) i64 {
+    var min: i64 = std.math.maxInt(i64);
+    for (cols.items) |col| {
+        min = std.math.min(min, col.items[col.items.len - 1]);
+    }
+    return min;
 }
 
 fn getColMax(cols: *Columns) i64 {
@@ -169,14 +207,28 @@ fn solve(path: []const u8, nshapes: usize) anyerror!usize {
         cols.deinit();
     }
 
+    var state_map = StateMap.init(allocator);
+    defer state_map.deinit();
+
     var n: usize = 0;
     while (n < nshapes) : (n += 1) {
         var shape = try genShape(allocator, shape_tys[shape_ty_idx], &cols);
         defer shape.deinit();
-        shape_ty_idx += 1;
-        shape_ty_idx %= shape_tys.len;
 
+        var first = true;
         while (true) {
+            if (first and shape_ty_idx == 0 and buf_idx == 0) {
+                first = false;
+                std.debug.print("checking for pattern...\n", .{});
+                var state = getState(&cols, shape_ty_idx, buf_idx);
+                var ext_state = state_map.get(state);
+                if (ext_state != null) {
+                    std.debug.print("pattern found: {any}\n", .{state});
+                } else {
+                    try state_map.put(state, 0);
+                }
+            }
+
             const move = buf[buf_idx];
             buf_idx += 1;
             buf_idx %= (buf.len - 1);
@@ -186,6 +238,9 @@ fn solve(path: []const u8, nshapes: usize) anyerror!usize {
                 break;
             }
         }
+
+        shape_ty_idx += 1;
+        shape_ty_idx %= shape_tys.len;
 
         // printCols(cols);
     }
