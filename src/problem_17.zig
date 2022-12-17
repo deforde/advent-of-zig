@@ -83,6 +83,9 @@ fn checkCollisions(cols: *Columns, s: *Shape) bool {
             if (c.y == col.items[@intCast(usize, i)]) {
                 return true;
             }
+            if (c.y > col.items[@intCast(usize, i)]) {
+                break;
+            }
         }
     }
     return false;
