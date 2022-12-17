@@ -13,7 +13,22 @@ const Shape = std.ArrayList(Coord);
 const ShapeTy = enum { HORI, PLUS, JAY, VERT, SQR };
 
 const State = [9]i64;
-const StateMap = std.AutoHashMap(State, u8);
+const ReconData = struct {
+    max: i64,
+    min: i64,
+    n: usize,
+};
+const StateMap = std.AutoHashMap(State, ReconData);
+
+fn shiftCols(cols: *Columns, dh: i64, min: i64) void {
+    for (cols.items) |*col| {
+        for (col.items) |*h| {
+            if (h.* >= min) {
+                h.* += dh;
+            }
+        }
+    }
+}
 
 fn getState(cols: *Columns, shape_ty_idx: usize, buf_idx: usize) State {
     var state: State = undefined;
@@ -209,26 +224,35 @@ fn solve(path: []const u8, nshapes: usize) anyerror!usize {
 
     var state_map = StateMap.init(allocator);
     defer state_map.deinit();
+    var cycle_found = false;
 
     var n: usize = 0;
     while (n < nshapes) : (n += 1) {
         var shape = try genShape(allocator, shape_tys[shape_ty_idx], &cols);
         defer shape.deinit();
 
-        var first = true;
-        while (true) {
-            if (first and shape_ty_idx == 0 and buf_idx == 0) {
-                first = false;
-                std.debug.print("checking for pattern...\n", .{});
-                var state = getState(&cols, shape_ty_idx, buf_idx);
-                var ext_state = state_map.get(state);
-                if (ext_state != null) {
-                    std.debug.print("pattern found: {any}\n", .{state});
-                } else {
-                    try state_map.put(state, 0);
-                }
+        if (!cycle_found) {
+            // std.debug.print("checking for pattern...\n", .{});
+            var state = getState(&cols, shape_ty_idx, buf_idx);
+            var ext_state = state_map.get(state);
+            if (ext_state != null) {
+                cycle_found = true;
+                const recon_data = ext_state.?;
+                const dn = n - recon_data.n;
+                const ncycles = (nshapes - n) / dn;
+                const dh = (getColMax(&cols) - recon_data.max) * @intCast(i64, ncycles);
+                // std.debug.print("pattern found: {any}, recon_data = {any}\n", .{ state, recon_data });
+                // std.debug.print("dh = {}, dn = {}, ncycles = {}\n", .{ dh, dn, ncycles });
+                shiftCols(&cols, dh, recon_data.min);
+                n += ncycles * dn;
+                shape.deinit();
+                shape = try genShape(allocator, shape_tys[shape_ty_idx], &cols);
+            } else {
+                try state_map.put(state, ReconData{ .max = getColMax(&cols), .min = getColMin(&cols), .n = n });
             }
+        }
 
+        while (true) {
             const move = buf[buf_idx];
             buf_idx += 1;
             buf_idx %= (buf.len - 1);
