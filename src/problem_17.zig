@@ -2,11 +2,11 @@ const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
 const Coord = struct {
-    x: i32 = 0,
-    y: i32 = 0,
+    x: i64 = 0,
+    y: i64 = 0,
 };
 
-const Columns = std.ArrayList(std.ArrayList(i32));
+const Columns = std.ArrayList(std.ArrayList(i64));
 
 const Shape = std.ArrayList(Coord);
 
@@ -16,12 +16,12 @@ fn updateColumns(s: *Shape, cols: *Columns) anyerror!void {
     for (s.items) |c| {
         var col = &cols.items[@intCast(usize, c.x)];
         try col.append(c.y);
-        std.sort.sort(i32, col.items, {}, comptime std.sort.asc(i32));
+        std.sort.sort(i64, col.items, {}, comptime std.sort.asc(i64));
     }
 }
 
-fn getColMax(cols: *Columns) i32 {
-    var max: i32 = 0;
+fn getColMax(cols: *Columns) i64 {
+    var max: i64 = 0;
     for (cols.items) |col| {
         max = std.math.max(max, col.items[col.items.len - 1]);
     }
@@ -142,7 +142,7 @@ fn printCols(cols: Columns) void {
     std.debug.print("\n", .{});
 }
 
-fn solve(path: []const u8) anyerror!usize {
+fn solve(path: []const u8, nshapes: usize) anyerror!usize {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer std.debug.assert(!gpa.deinit());
@@ -158,7 +158,7 @@ fn solve(path: []const u8) anyerror!usize {
     var cols = Columns.init(allocator);
     var i: usize = 0;
     while (i < 7) : (i += 1) {
-        var col = std.ArrayList(i32).init(allocator);
+        var col = std.ArrayList(i64).init(allocator);
         try col.append(0);
         try cols.append(col);
     }
@@ -169,8 +169,8 @@ fn solve(path: []const u8) anyerror!usize {
         cols.deinit();
     }
 
-    var n: i32 = 0;
-    while (n < 2022) : (n += 1) {
+    var n: usize = 0;
+    while (n < nshapes) : (n += 1) {
         var shape = try genShape(allocator, shape_tys[shape_ty_idx], &cols);
         defer shape.deinit();
         shape_ty_idx += 1;
@@ -197,11 +197,11 @@ fn solve(path: []const u8) anyerror!usize {
 }
 
 fn example1() anyerror!usize {
-    return solve("problems/example_17.txt");
+    return solve("problems/example_17.txt", 2022);
 }
 
 fn part1() anyerror!usize {
-    return solve("problems/problem_17.txt");
+    return solve("problems/problem_17.txt", 2022);
 }
 
 test "example1" {
