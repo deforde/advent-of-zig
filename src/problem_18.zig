@@ -222,5 +222,5 @@ test "part1" {
 
 test "part2" {
     const ans = try part2();
-    try std.testing.expectEqual(@as(usize, 3498), ans);
+    try std.testing.expectEqual(@as(usize, 2008), ans);
 }
