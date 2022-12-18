@@ -40,7 +40,7 @@ fn createGrid(path: []const u8, dims: *Dims) anyerror!Grid {
     return grid;
 }
 
-fn countExposedSides(grid: Grid, dims: Dims, c: Coord) usize {
+fn countExposedSides1(grid: Grid, dims: Dims, c: Coord) usize {
     var sides: usize = 0;
 
     if (c.x == 0 or grid[c.x - 1][c.y][c.z] == 0) {
@@ -67,7 +67,82 @@ fn countExposedSides(grid: Grid, dims: Dims, c: Coord) usize {
     return sides;
 }
 
-fn solve(path: []const u8) anyerror!usize {
+fn countExposedSides2(grid: Grid, dims: Dims, c: Coord) usize {
+    var sides: usize = 0;
+
+    if (c.x == 0 or grid[c.x - 1][c.y][c.z] == 2) {
+        sides += 1;
+    }
+    if (c.x == (dims.x - 1) or grid[c.x + 1][c.y][c.z] == 2) {
+        sides += 1;
+    }
+
+    if (c.y == 0 or grid[c.x][c.y - 1][c.z] == 2) {
+        sides += 1;
+    }
+    if (c.y == (dims.y - 1) or grid[c.x][c.y + 1][c.z] == 2) {
+        sides += 1;
+    }
+
+    if (c.z == 0 or grid[c.x][c.y][c.z - 1] == 2) {
+        sides += 1;
+    }
+    if (c.z == (dims.z - 1) or grid[c.x][c.y][c.z + 1] == 2) {
+        sides += 1;
+    }
+
+    return sides;
+}
+
+fn isExposed(grid: Grid, dims: Dims, c: Coord) bool {
+    if (c.x == 0 or grid[c.x - 1][c.y][c.z] == 2) {
+        return true;
+    }
+    if (c.x == (dims.x - 1) or grid[c.x + 1][c.y][c.z] == 2) {
+        return true;
+    }
+
+    if (c.y == 0 or grid[c.x][c.y - 1][c.z] == 2) {
+        return true;
+    }
+    if (c.y == (dims.y - 1) or grid[c.x][c.y + 1][c.z] == 2) {
+        return true;
+    }
+
+    if (c.z == 0 or grid[c.x][c.y][c.z - 1] == 2) {
+        return true;
+    }
+    if (c.z == (dims.z - 1) or grid[c.x][c.y][c.z + 1] == 2) {
+        return true;
+    }
+
+    return false;
+}
+
+fn floodFill(grid: *Grid, dims: Dims) void {
+    var change_detected = true;
+    while (change_detected) {
+        change_detected = false;
+        var x: usize = 0;
+        while (x < dims.x) : (x += 1) {
+            var y: usize = 0;
+            while (y < dims.y) : (y += 1) {
+                var z: usize = 0;
+                while (z < dims.z) : (z += 1) {
+                    if (grid[x][y][z] == 0) {
+                        const c = Coord{ .x = x, .y = y, .z = z };
+                        if (isExposed(grid.*, dims, c)) {
+                            grid[x][y][z] = 2;
+                            change_detected = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn solve1(path: []const u8) anyerror!usize {
     var dims = Dims{};
     var grid = try createGrid(path, &dims);
 
@@ -81,7 +156,31 @@ fn solve(path: []const u8) anyerror!usize {
             while (z < dims.z) : (z += 1) {
                 if (grid[x][y][z] == 1) {
                     const c = Coord{ .x = x, .y = y, .z = z };
-                    sa += countExposedSides(grid, dims, c);
+                    sa += countExposedSides1(grid, dims, c);
+                }
+            }
+        }
+    }
+
+    return sa;
+}
+
+fn solve2(path: []const u8) anyerror!usize {
+    var dims = Dims{};
+    var grid = try createGrid(path, &dims);
+    floodFill(&grid, dims);
+
+    var sa: usize = 0;
+
+    var x: usize = 0;
+    while (x < dims.x) : (x += 1) {
+        var y: usize = 0;
+        while (y < dims.y) : (y += 1) {
+            var z: usize = 0;
+            while (z < dims.z) : (z += 1) {
+                if (grid[x][y][z] == 1) {
+                    const c = Coord{ .x = x, .y = y, .z = z };
+                    sa += countExposedSides2(grid, dims, c);
                 }
             }
         }
@@ -91,11 +190,19 @@ fn solve(path: []const u8) anyerror!usize {
 }
 
 fn example1() anyerror!usize {
-    return solve("problems/example_18.txt");
+    return solve1("problems/example_18.txt");
+}
+
+fn example2() anyerror!usize {
+    return solve2("problems/example_18.txt");
 }
 
 fn part1() anyerror!usize {
-    return solve("problems/problem_18.txt");
+    return solve1("problems/problem_18.txt");
+}
+
+fn part2() anyerror!usize {
+    return solve2("problems/problem_18.txt");
 }
 
 test "example1" {
@@ -103,7 +210,17 @@ test "example1" {
     try std.testing.expectEqual(@as(usize, 64), ans);
 }
 
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(usize, 58), ans);
+}
+
 test "part1" {
     const ans = try part1();
+    try std.testing.expectEqual(@as(usize, 3498), ans);
+}
+
+test "part2" {
+    const ans = try part2();
     try std.testing.expectEqual(@as(usize, 3498), ans);
 }
