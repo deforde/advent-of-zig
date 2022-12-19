@@ -17,4 +17,5 @@ test {
     _ = @import("problem_16.zig");
     _ = @import("problem_17.zig");
     _ = @import("problem_18.zig");
+    _ = @import("problem_19.zig");
 }
