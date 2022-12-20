@@ -1,0 +1,258 @@
+const std = @import("std");
+const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
+
+const Node = struct {
+    x: i64 = 0,
+    prev: ?*Node = null,
+    next: ?*Node = null,
+    mprev: ?*Node = null,
+    mnext: ?*Node = null,
+};
+
+const NodeList = struct {
+    head: ?*Node = null,
+    tail: ?*Node = null,
+    mhead: ?*Node = null,
+    mtail: ?*Node = null,
+};
+
+fn printList(l: NodeList) void {
+    var n = l.head.?;
+    std.debug.print("\n", .{});
+    while (n != l.tail.?) : (n = n.next.?) {
+        std.debug.print("{} ", .{n.x});
+    }
+    std.debug.print("{}\n", .{n.x});
+    n = l.mhead.?;
+    while (n != l.mtail.?) : (n = n.mnext.?) {
+        std.debug.print("{} ", .{n.x});
+    }
+    std.debug.print("{}\n", .{n.x});
+}
+
+fn fixMix(l: *NodeList) void {
+    var n = l.head.?;
+    while (n != l.tail.?) {
+        var tmp = n.next.?;
+        n.next = n.mnext;
+        n.prev = n.mprev;
+        n = tmp;
+    }
+    n.next = n.mnext;
+    n.prev = n.mprev;
+    l.head = l.mhead;
+    l.tail = l.mtail;
+}
+
+fn doMix(l: *NodeList, n: *Node, len: usize) anyerror!void {
+    const x = n.x;
+    if (x != 0) {
+        var mprev = n.mprev.?;
+        var mnext = n.mnext.?;
+        mprev.mnext = mnext;
+        mnext.mprev = mprev;
+        if (n == l.mhead) {
+            l.mhead = mnext;
+        } else if (n == l.mtail) {
+            l.mtail = mprev;
+        }
+
+        var ins = mprev;
+        const inc = @intCast(usize, try std.math.absInt(x)) % (len - 1);
+
+        if (x > 0) {
+            var i: usize = 0;
+            while (i < inc) : (i += 1) {
+                ins = ins.mnext.?;
+            }
+        } else {
+            var i: usize = 0;
+            while (i < inc) : (i += 1) {
+                ins = ins.mprev.?;
+            }
+        }
+
+        mnext = ins.mnext.?;
+        mnext.mprev = n;
+        n.mnext = mnext;
+        ins.mnext = n;
+        n.mprev = ins;
+
+        if (ins == l.mtail) {
+            l.mtail = n;
+        }
+
+        // printList(l.*);
+    }
+}
+
+fn mixList(l: *NodeList, len: usize) anyerror!void {
+    var n = l.head.?;
+    while (n != l.tail.?) : (n = n.next.?) {
+        try doMix(l, n, len);
+    }
+    try doMix(l, n, len);
+}
+
+fn solve1(path: []const u8) anyerror!i64 {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    const buf = try readFileIntoBuf(allocator, path);
+    defer allocator.free(buf);
+
+    var store = std.ArrayList(Node).init(allocator);
+    defer store.deinit();
+    try store.ensureTotalCapacity(5000);
+
+    var prev: ?*Node = null;
+
+    var list = NodeList{};
+
+    var lines = std.mem.tokenize(u8, buf, "\n");
+    while (lines.next()) |line| {
+        const x = try std.fmt.parseInt(i64, line, 10);
+        try store.append(Node{});
+        var n = &store.items[store.items.len - 1];
+        n.x = x;
+        n.prev = prev;
+        n.mprev = prev;
+        if (prev != null) {
+            prev.?.next = n;
+            prev.?.mnext = n;
+        } else {
+            list.head = n;
+            list.mhead = n;
+        }
+        list.tail = n;
+        list.mtail = n;
+        prev = n;
+    }
+
+    prev.?.next = &store.items[0];
+    prev.?.mnext = &store.items[0];
+    store.items[0].prev = prev;
+    store.items[0].mprev = prev;
+
+    // printList(list);
+    try mixList(&list, store.items.len);
+    // printList(list);
+
+    var sum: i64 = 0;
+    var n = list.mhead;
+    while (n.?.x != 0) : (n = n.?.mnext) {}
+    n = n.?.mnext;
+    var i: usize = 0;
+    while (i < 3000) : (i += 1) {
+        if ((i + 1) % 1000 == 0) {
+            // std.debug.print("\n{}\n", .{n.?.x});
+            sum += n.?.x;
+        }
+        n = n.?.mnext;
+    }
+
+    return sum;
+}
+
+fn solve2(path: []const u8) anyerror!i64 {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    const buf = try readFileIntoBuf(allocator, path);
+    defer allocator.free(buf);
+
+    var store = std.ArrayList(Node).init(allocator);
+    defer store.deinit();
+    try store.ensureTotalCapacity(5000);
+
+    const decrypt_key: i64 = 811589153;
+
+    var prev: ?*Node = null;
+
+    var list = NodeList{};
+
+    var lines = std.mem.tokenize(u8, buf, "\n");
+    while (lines.next()) |line| {
+        const x = try std.fmt.parseInt(i64, line, 10) * decrypt_key;
+        try store.append(Node{});
+        var n = &store.items[store.items.len - 1];
+        n.x = x;
+        n.prev = prev;
+        n.mprev = prev;
+        if (prev != null) {
+            prev.?.next = n;
+            prev.?.mnext = n;
+        } else {
+            list.head = n;
+            list.mhead = n;
+        }
+        list.tail = n;
+        list.mtail = n;
+        prev = n;
+    }
+
+    prev.?.next = &store.items[0];
+    prev.?.mnext = &store.items[0];
+    store.items[0].prev = prev;
+    store.items[0].mprev = prev;
+
+    // printList(list);
+    var j: i64 = 0;
+    while (j < 10) : (j += 1) {
+        try mixList(&list, store.items.len);
+    }
+    // printList(list);
+
+    var sum: i64 = 0;
+    var n = list.mhead;
+    while (n.?.x != 0) : (n = n.?.mnext) {}
+    n = n.?.mnext;
+    var i: usize = 0;
+    while (i < 3000) : (i += 1) {
+        if ((i + 1) % 1000 == 0) {
+            // std.debug.print("\n{}\n", .{n.?.x});
+            sum += n.?.x;
+        }
+        n = n.?.mnext;
+    }
+
+    return sum;
+}
+
+fn example1() anyerror!i64 {
+    return solve1("problems/example_20.txt");
+}
+
+fn example2() anyerror!i64 {
+    return solve2("problems/example_20.txt");
+}
+
+fn part1() anyerror!i64 {
+    return solve1("problems/problem_20.txt");
+}
+
+fn part2() anyerror!i64 {
+    return solve2("problems/problem_20.txt");
+}
+
+test "example1" {
+    const ans = try example1();
+    try std.testing.expectEqual(@as(i64, 3), ans);
+}
+
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(i64, 1623178306), ans);
+}
+
+test "part1" {
+    const ans = try part1();
+    try std.testing.expectEqual(@as(i64, 6712), ans);
+}
+
+test "part2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(i64, 1595584274798), ans);
+}
