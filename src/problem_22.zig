@@ -27,22 +27,22 @@ fn walk(grid: Grid, nrows: usize, ncols: usize, pos: Coord, dir: u8) Coord {
     var new_pos = pos;
     while (true) {
         switch (dir) {
-            0 => {
+            0 => { // East
                 new_pos.c += 1;
                 new_pos.c %= ncols;
             },
-            1 => {
+            1 => { // South
                 new_pos.r += 1;
                 new_pos.r %= nrows;
             },
-            2 => {
+            2 => { // West
                 if (new_pos.c == 0) {
                     new_pos.c = ncols - 1;
                 } else {
                     new_pos.c -= 1;
                 }
             },
-            3 => {
+            3 => { // North
                 if (new_pos.r == 0) {
                     new_pos.r = nrows - 1;
                 } else {
@@ -98,7 +98,7 @@ fn solve(path: []const u8) anyerror!usize {
     const instr = blocks.next().?;
     var numstr = [_]u8{0} ** 128;
     var numstr_idx: usize = 0;
-    for (instr[0 .. instr.len - 1]) |ch| {
+    for (instr) |ch| {
         if (ch >= '0' and ch <= '9') {
             numstr[numstr_idx] = ch;
             numstr_idx += 1;
@@ -110,7 +110,10 @@ fn solve(path: []const u8) anyerror!usize {
         while (j < cnt) : (j += 1) {
             pos = walk(grid, nrows, ncols, pos, dir);
         }
-        // std.debug.print("{}\n", .{pos});
+        // std.debug.print("{}, {c}\n", .{ pos, ch });
+        if (ch == '\n') {
+            break;
+        }
         dir = rotate(dir, ch);
     }
 
@@ -133,5 +136,5 @@ test "example1" {
 
 test "part1" {
     const ans = try part1();
-    try std.testing.expectEqual(@as(usize, 6032), ans);
+    try std.testing.expectEqual(@as(usize, 27436), ans);
 }
