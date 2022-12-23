@@ -116,7 +116,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
     return c;
 }
 
-fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) anyerror!void {
+fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) anyerror!bool {
     var nmap = ElfMap.init(allocator);
     var banned = ElfMap.init(allocator);
     defer banned.deinit();
@@ -144,9 +144,13 @@ fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) anyerror!v
     const dir = dirs.orderedRemove(0);
     try dirs.append(dir);
 
+    const res = areMapsEqual(map, &nmap);
+
     var omap = map.*;
     omap.deinit();
     map.* = nmap;
+
+    return res;
 }
 
 fn countEmptyTiles(map: *ElfMap) i64 {
@@ -233,7 +237,7 @@ fn solve1(path: []const u8) anyerror!i64 {
 
     var i: i32 = 0;
     while (i < 10) : (i += 1) {
-        try simMap(allocator, &map, &dirs);
+        _ = try simMap(allocator, &map, &dirs);
         // printMap(&map);
     }
 
@@ -257,15 +261,7 @@ fn solve2(path: []const u8) anyerror!i64 {
     try dirs.append('E');
 
     var i: i32 = 1;
-    while (true) : (i += 1) {
-        var dup = try map.clone();
-        defer dup.deinit();
-        try simMap(allocator, &map, &dirs);
-        if (areMapsEqual(&map, &dup)) {
-            break;
-        }
-        // printMap(&map);
-    }
+    while (!try simMap(allocator, &map, &dirs)) : (i += 1) {}
 
     return i;
 }
