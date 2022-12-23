@@ -202,7 +202,20 @@ fn printMap(map: *ElfMap) void {
     std.debug.print("\n", .{});
 }
 
-fn solve(path: []const u8) anyerror!i64 {
+fn areMapsEqual(map: *ElfMap, omap: *ElfMap) bool {
+    if (map.count() != omap.count()) {
+        return false;
+    }
+    var it = map.iterator();
+    while (it.next()) |e| {
+        if (omap.get(e.key_ptr.*) == null) {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn solve1(path: []const u8) anyerror!i64 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer std.debug.assert(!gpa.deinit());
@@ -227,12 +240,50 @@ fn solve(path: []const u8) anyerror!i64 {
     return countEmptyTiles(&map);
 }
 
+fn solve2(path: []const u8) anyerror!i64 {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var map = try createMap(allocator, path);
+    defer map.deinit();
+    // printMap(&map);
+
+    var dirs = DirList.init(allocator);
+    defer dirs.deinit();
+    try dirs.append('N');
+    try dirs.append('S');
+    try dirs.append('W');
+    try dirs.append('E');
+
+    var i: i32 = 1;
+    while (true) : (i += 1) {
+        var dup = try map.clone();
+        defer dup.deinit();
+        try simMap(allocator, &map, &dirs);
+        if (areMapsEqual(&map, &dup)) {
+            break;
+        }
+        // printMap(&map);
+    }
+
+    return i;
+}
+
 fn example1() anyerror!i64 {
-    return solve("problems/example_23.txt");
+    return solve1("problems/example_23.txt");
+}
+
+fn example2() anyerror!i64 {
+    return solve2("problems/example_23.txt");
 }
 
 fn part1() anyerror!i64 {
-    return solve("problems/problem_23.txt");
+    return solve1("problems/problem_23.txt");
+}
+
+fn part2() anyerror!i64 {
+    return solve2("problems/problem_23.txt");
 }
 
 test "example1" {
@@ -240,7 +291,17 @@ test "example1" {
     try std.testing.expectEqual(@as(i64, 110), ans);
 }
 
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(i64, 20), ans);
+}
+
 test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(i64, 4091), ans);
+}
+
+test "part2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(i64, 1036), ans);
 }
