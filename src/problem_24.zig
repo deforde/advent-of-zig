@@ -129,6 +129,8 @@ fn getViableMoves(allocator: std.mem.Allocator, map: *BlizzMap, pos: Coord, nrow
 
     if (pos.r == -1) {
         try appendIfOpen(map, &moves, Coord{ .r = 0, .c = 0 });
+    } else if (pos.r == nrows) {
+        try appendIfOpen(map, &moves, Coord{ .r = nrows - 1, .c = ncols - 1 });
     } else {
         if (pos.r != 0) {
             try appendIfOpen(map, &moves, Coord{ .r = pos.r - 1, .c = pos.c });
@@ -162,34 +164,22 @@ fn appendUnique(paths: *std.ArrayList(Coord), pos: Coord) anyerror!void {
     }
 }
 
-fn solve(path: []const u8) anyerror!i32 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
-
-    var nrows: i32 = 0;
-    var ncols: i32 = 0;
-    var map = try initMap(allocator, path, &nrows, &ncols);
-    defer map.deinit();
-
-    // std.debug.print("\n{} {}\n", .{ nrows, ncols });
-
+fn getQuickestPath(allocator: std.mem.Allocator, map: *BlizzMap, strt: Coord, end: Coord, nrows: i32, ncols: i32) anyerror!i32 {
     var paths = std.ArrayList(Coord).init(allocator);
     defer paths.deinit();
-    try paths.append(Coord{ .r = -1, .c = 0 });
+    try paths.append(strt);
 
     var min: i32 = 0;
     while (true) : (min += 1) {
-        try iterateMap(allocator, &map, nrows, ncols);
+        try iterateMap(allocator, map, nrows, ncols);
         var npaths = std.ArrayList(Coord).init(allocator);
         for (paths.items) |path_tip| {
-            var moves = try getViableMoves(allocator, &map, path_tip, nrows, ncols);
+            var moves = try getViableMoves(allocator, map, path_tip, nrows, ncols);
             defer moves.deinit();
             while (moves.popOrNull()) |npos| {
-                if (npos.r == nrows - 1 and npos.c == ncols - 1) {
+                if (npos.r == end.r and npos.c == end.c) {
                     npaths.deinit();
-                    // +1 to move to this pos, +1 again to move to exit
-                    return min + 2;
+                    return min + 1;
                 }
                 try appendUnique(&npaths, npos);
             }
@@ -200,12 +190,62 @@ fn solve(path: []const u8) anyerror!i32 {
     unreachable;
 }
 
+fn solve1(path: []const u8) anyerror!i32 {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var nrows: i32 = 0;
+    var ncols: i32 = 0;
+    var map = try initMap(allocator, path, &nrows, &ncols);
+    defer map.deinit();
+
+    const strt = Coord{ .r = -1, .c = 0 };
+    const end = Coord{ .r = nrows - 1, .c = ncols - 1 };
+    return try getQuickestPath(allocator, &map, strt, end, nrows, ncols) + 1;
+}
+
+fn solve2(path: []const u8) anyerror!i32 {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer std.debug.assert(!gpa.deinit());
+
+    var nrows: i32 = 0;
+    var ncols: i32 = 0;
+    var map = try initMap(allocator, path, &nrows, &ncols);
+    defer map.deinit();
+
+    var mins: i32 = 0;
+
+    var strt = Coord{ .r = -1, .c = 0 };
+    var end = Coord{ .r = nrows - 1, .c = ncols - 1 };
+    mins += try getQuickestPath(allocator, &map, strt, end, nrows, ncols) + 1;
+
+    strt = Coord{ .r = nrows, .c = ncols - 1 };
+    end = Coord{ .r = 0, .c = 0 };
+    mins += try getQuickestPath(allocator, &map, strt, end, nrows, ncols);
+
+    strt = Coord{ .r = -1, .c = 0 };
+    end = Coord{ .r = nrows - 1, .c = ncols - 1 };
+    mins += try getQuickestPath(allocator, &map, strt, end, nrows, ncols);
+
+    return mins;
+}
+
 fn example1() anyerror!i32 {
-    return solve("problems/example_24.txt");
+    return solve1("problems/example_24.txt");
+}
+
+fn example2() anyerror!i32 {
+    return solve2("problems/example_24.txt");
 }
 
 fn part1() anyerror!i32 {
-    return solve("problems/problem_24.txt");
+    return solve1("problems/problem_24.txt");
+}
+
+fn part2() anyerror!i32 {
+    return solve2("problems/problem_24.txt");
 }
 
 test "example1" {
@@ -213,7 +253,17 @@ test "example1" {
     try std.testing.expectEqual(@as(i32, 18), ans);
 }
 
+test "example2" {
+    const ans = try example2();
+    try std.testing.expectEqual(@as(i32, 54), ans);
+}
+
 test "part1" {
     const ans = try part1();
-    try std.testing.expectEqual(@as(i32, 18), ans);
+    try std.testing.expectEqual(@as(i32, 238), ans);
+}
+
+test "part2" {
+    const ans = try part2();
+    try std.testing.expectEqual(@as(i32, 751), ans);
 }
