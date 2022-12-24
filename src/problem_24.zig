@@ -91,7 +91,7 @@ fn updateMapEntry(map: *BlizzMap, pos: Coord, dir: Dir) anyerror!void {
         try map.put(pos, dir_arr);
     } else {
         blizz.?[@enumToInt(dir)] += 1;
-        std.debug.assert(blizz.?[@enumToInt(dir)] == 1 or blizz.?[@enumToInt(dir)] == 0);
+        std.debug.assert(blizz.?[@enumToInt(dir)] == 1);
     }
 }
 
