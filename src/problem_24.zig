@@ -147,6 +147,21 @@ fn getViableMoves(allocator: std.mem.Allocator, map: *BlizzMap, pos: Coord, nrow
     return moves;
 }
 
+fn isContained(paths: *std.ArrayList(Coord), pos: Coord) bool {
+    for (paths.items) |pt| {
+        if (pt.r == pos.r and pt.c == pos.c) {
+            return true;
+        }
+    }
+    return false;
+}
+
+fn appendUnique(paths: *std.ArrayList(Coord), pos: Coord) anyerror!void {
+    if (!isContained(paths, pos)) {
+        try paths.append(pos);
+    }
+}
+
 fn solve(path: []const u8) anyerror!i32 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -176,7 +191,7 @@ fn solve(path: []const u8) anyerror!i32 {
                     // +1 to move to this pos, +1 again to move to exit
                     return min + 2;
                 }
-                try npaths.append(npos);
+                try appendUnique(&npaths, npos);
             }
         }
         paths.deinit();
@@ -198,7 +213,7 @@ test "example1" {
     try std.testing.expectEqual(@as(i32, 18), ans);
 }
 
-// test "part1" {
-//     const ans = try part1();
-//     try std.testing.expectEqual(@as(i32, 18), ans);
-// }
+test "part1" {
+    const ans = try part1();
+    try std.testing.expectEqual(@as(i32, 18), ans);
+}
