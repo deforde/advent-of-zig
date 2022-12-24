@@ -22,4 +22,5 @@ test {
     _ = @import("problem_21.zig");
     _ = @import("problem_22.zig");
     _ = @import("problem_23.zig");
+    _ = @import("problem_24.zig");
 }
