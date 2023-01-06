@@ -127,7 +127,7 @@ fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) anyerror!b
     while (it.next()) |e| {
         const dst = try moveElf(map, dirs, e.key_ptr.*);
         // std.debug.print("{} -> {}\n", .{ e.key_ptr.*, dst });
-        if (banned.get(dst) != null) {
+        if (banned.contains(dst)) {
             try nmap.put(e.key_ptr.*, e.key_ptr.*);
             continue;
         }
