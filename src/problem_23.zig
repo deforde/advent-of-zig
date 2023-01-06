@@ -121,6 +121,8 @@ fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) anyerror!b
     var banned = ElfMap.init(allocator);
     defer banned.deinit();
 
+    var mv_cnt: usize = 0;
+
     var it = map.iterator();
     while (it.next()) |e| {
         const dst = try moveElf(map, dirs, e.key_ptr.*);
@@ -133,18 +135,22 @@ fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) anyerror!b
         if (mv != null) {
             const src = mv.?;
             _ = nmap.remove(dst);
+            mv_cnt -= 1;
             try nmap.put(src, src);
             try banned.put(dst, dst);
             try nmap.put(e.key_ptr.*, e.key_ptr.*);
         } else {
             try nmap.put(dst, e.key_ptr.*);
+            if (dst.x != e.key_ptr.*.x or dst.y != e.key_ptr.*.y) {
+                mv_cnt += 1;
+            }
         }
     }
 
     const dir = dirs.orderedRemove(0);
     try dirs.append(dir);
 
-    const res = areMapsEqual(map, &nmap);
+    const res = mv_cnt == 0;
 
     var omap = map.*;
     omap.deinit();
@@ -204,19 +210,6 @@ fn printMap(map: *ElfMap) void {
         std.debug.print("\n", .{});
     }
     std.debug.print("\n", .{});
-}
-
-fn areMapsEqual(map: *ElfMap, omap: *ElfMap) bool {
-    if (map.count() != omap.count()) {
-        return false;
-    }
-    var it = map.iterator();
-    while (it.next()) |e| {
-        if (omap.get(e.key_ptr.*) == null) {
-            return false;
-        }
-    }
-    return true;
 }
 
 fn solve1(path: []const u8) anyerror!i64 {

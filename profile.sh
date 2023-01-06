@@ -27,4 +27,5 @@ for PROBLEM_SRC in $PROBLEM_SRCS; do
     xargs time -f "%E" &>> profile.txt
 done
 
-awk '/src\/problem_/ { split($0, a, "_"); split(a[2], a, "."); problem = "problem " + a[1]; } /^part/ { part = $0; } /^[0-9]/ { print problem " " part " " $0; }' profile.txt | sort -r -k3
+awk '/src\/problem_/ { split($0, a, "_"); split(a[2], a, "."); problem = "problem " + a[1]; } /^part/ { part = $0; } /^[0-9]:/ { print problem " " part " " $0; }' profile.txt | sort -r -k3
+rm profile.txt
