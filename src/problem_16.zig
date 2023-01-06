@@ -129,7 +129,7 @@ fn printDistMap(dist_map: *NodeDistMap) void {
     }
 }
 
-fn getMaxPressPathInner(map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.ArrayList(i64), src: i64, p: i64, mins_remaining: i64, path: *std.ArrayList(i64), paths: *std.ArrayList(Path)) anyerror!i64 {
+fn getMaxPressPathInner(map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.ArrayList(i64), src: i64, p: i64, mins_remaining: i64, path: *std.ArrayList(i64), paths: ?*std.ArrayList(Path)) anyerror!i64 {
     var max_p: i64 = p;
     for (dst_nodes.items) |dst, i| {
         var dup = try dst_nodes.clone();
@@ -147,7 +147,9 @@ fn getMaxPressPathInner(map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.A
         var npath = try path.clone();
         defer npath.deinit();
         try npath.append(dst);
-        try updatePath(paths, &npath, np);
+        if (paths != null) {
+            try updatePath(paths.?, &npath, np);
+        }
 
         var nmp = try getMaxPressPathInner(map, dist_map, &dup, dst, np, nmr, &npath, paths);
         max_p = std.math.max(nmp, max_p);
@@ -189,7 +191,7 @@ fn updatePath(paths: *std.ArrayList(Path), npath: *std.ArrayList(i64), press: i6
     try paths.append(Path{ .nodes = try npath.clone(), .press = press });
 }
 
-fn getMaxPressPath(allocator: std.mem.Allocator, map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.ArrayList(i64), paths: *std.ArrayList(Path), maxt: i64) anyerror!i64 {
+fn getMaxPressPath(allocator: std.mem.Allocator, map: *NodeMap, dist_map: *NodeDistMap, dst_nodes: *std.ArrayList(i64), paths: ?*std.ArrayList(Path), maxt: i64) anyerror!i64 {
     var path = std.ArrayList(i64).init(allocator);
     defer path.deinit();
     try path.append(nodeNameToId("AA"));
@@ -197,9 +199,9 @@ fn getMaxPressPath(allocator: std.mem.Allocator, map: *NodeMap, dist_map: *NodeD
 }
 
 fn solve1(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var map = try genNodeMap(allocator, path);
     defer {
@@ -230,24 +232,16 @@ fn solve1(path: []const u8) anyerror!usize {
         dist_map.deinit();
     }
 
-    var paths = std.ArrayList(Path).init(allocator);
-    defer {
-        for (paths.items) |*p| {
-            p.nodes.deinit();
-        }
-        paths.deinit();
-    }
-
-    var p = try getMaxPressPath(allocator, &map, &dist_map, &non_zero_fr, &paths, 30);
+    var p = try getMaxPressPath(allocator, &map, &dist_map, &non_zero_fr, null, 30);
 
     const ans: usize = @intCast(usize, p);
     return ans;
 }
 
 fn solve2(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var map = try genNodeMap(allocator, path);
     defer {

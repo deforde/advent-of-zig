@@ -117,9 +117,9 @@ fn getRanges(ranges: *std.ArrayList(Range), allocator: std.mem.Allocator, sbpair
 }
 
 fn solve1(path: []const u8, y: i64) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var sbpairs = try getSBPairs(allocator, path);
     defer sbpairs.deinit();
@@ -133,9 +133,9 @@ fn solve1(path: []const u8, y: i64) anyerror!usize {
 }
 
 fn solve2(path: []const u8, xmax: i64, ymax: i64) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var sbpairs = try getSBPairs(allocator, path);
     defer sbpairs.deinit();

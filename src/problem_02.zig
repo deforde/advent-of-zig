@@ -14,9 +14,9 @@ const p2_score_lookup = [_][3]i32{
 };
 
 fn getTotalScore(path: []const u8, lookup: *const [3][3]i32) anyerror!i32 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);

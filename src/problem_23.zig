@@ -220,9 +220,9 @@ fn areMapsEqual(map: *ElfMap, omap: *ElfMap) bool {
 }
 
 fn solve1(path: []const u8) anyerror!i64 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var map = try createMap(allocator, path);
     defer map.deinit();
@@ -245,9 +245,9 @@ fn solve1(path: []const u8) anyerror!i64 {
 }
 
 fn solve2(path: []const u8) anyerror!i64 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var map = try createMap(allocator, path);
     defer map.deinit();

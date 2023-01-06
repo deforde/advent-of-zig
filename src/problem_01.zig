@@ -11,9 +11,9 @@ fn updateList(list: []i32, sum: i32) void {
 }
 
 fn getSumList() anyerror![3]i32 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     const buf = try readFileIntoBuf(allocator, "problems/problem_01.txt");
     defer allocator.free(buf);

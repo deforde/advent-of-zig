@@ -191,9 +191,9 @@ fn getQuickestPath(allocator: std.mem.Allocator, map: *BlizzMap, strt: Coord, en
 }
 
 fn solve1(path: []const u8) anyerror!i32 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var nrows: i32 = 0;
     var ncols: i32 = 0;
@@ -206,9 +206,9 @@ fn solve1(path: []const u8) anyerror!i32 {
 }
 
 fn solve2(path: []const u8) anyerror!i32 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var nrows: i32 = 0;
     var ncols: i32 = 0;

@@ -120,9 +120,9 @@ fn printMonkeys(monkeys: *std.ArrayList(Monkey)) void {
 }
 
 fn solve(path: []const u8, nrounds: usize, do_div: bool) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var monkeys = try genMonkeys(allocator, path);
     defer {

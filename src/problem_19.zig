@@ -191,9 +191,9 @@ fn runBlueprint(allocator: std.mem.Allocator, bp: BluePrint, mins: u32) anyerror
 }
 
 fn solve1(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var bps = try getBlueprints(allocator, path);
     defer bps.deinit();
@@ -207,9 +207,9 @@ fn solve1(path: []const u8) anyerror!usize {
 }
 
 fn solve2(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var bps = try getBlueprints(allocator, path);
     defer bps.deinit();

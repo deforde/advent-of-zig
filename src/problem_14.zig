@@ -60,9 +60,9 @@ fn createMap(allocator: std.mem.Allocator, path: []const u8, xmin: *isize, xmax:
 }
 
 fn solve1(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var xmin: isize = 0;
     var xmax: isize = 0;
@@ -104,9 +104,9 @@ fn solve1(path: []const u8) anyerror!usize {
 }
 
 fn solve2(path: []const u8) anyerror!usize {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     var xmin: isize = 0;
     var xmax: isize = 0;

@@ -12,9 +12,9 @@ const Coord = struct {
 const Dims = Coord;
 
 fn createGrid(path: []const u8, dims: *Dims) anyerror!Grid {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer std.debug.assert(!gpa.deinit());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
