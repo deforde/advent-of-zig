@@ -198,11 +198,11 @@ fn example2() anyerror!usize {
     return solve2("problems/example_08.txt");
 }
 
-fn problem1() anyerror!usize {
+fn part1() anyerror!usize {
     return solve1("problems/problem_08.txt");
 }
 
-fn problem2() anyerror!usize {
+fn part2() anyerror!usize {
     return solve2("problems/problem_08.txt");
 }
 
@@ -216,12 +216,12 @@ test "example2" {
     try std.testing.expectEqual(@as(usize, 8), ans);
 }
 
-test "problem1" {
-    const ans = try problem1();
+test "part1" {
+    const ans = try part1();
     try std.testing.expectEqual(@as(usize, 1825), ans);
 }
 
-test "problem2" {
-    const ans = try problem2();
+test "part2" {
+    const ans = try part2();
     try std.testing.expectEqual(@as(usize, 235200), ans);
 }

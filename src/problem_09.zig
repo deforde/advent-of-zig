@@ -130,12 +130,12 @@ test "example2" {
     try std.testing.expectEqual(@as(usize, 36), ans);
 }
 
-test "par1" {
+test "part1" {
     const ans = try part1();
     try std.testing.expectEqual(@as(usize, 6212), ans);
 }
 
-test "par2" {
+test "part2" {
     const ans = try part2();
     try std.testing.expectEqual(@as(usize, 2522), ans);
 }
