@@ -28,7 +28,7 @@ const SBPair = struct {
     b: Coord = Coord{},
     d: ?i64 = null,
 
-    fn getDist(self: *SBPair) anyerror!i64 {
+    fn getDist(self: *SBPair) !i64 {
         if (self.d == null) {
             self.d = try std.math.absInt(self.b.x - self.s.x) + try std.math.absInt(self.b.y - self.s.y);
         }
@@ -36,7 +36,7 @@ const SBPair = struct {
     }
 };
 
-fn getSBPairs(allocator: std.mem.Allocator, path: []const u8) anyerror!std.ArrayList(SBPair) {
+fn getSBPairs(allocator: std.mem.Allocator, path: []const u8) !std.ArrayList(SBPair) {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
@@ -78,7 +78,7 @@ fn getSBPairs(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
     return sbpairs;
 }
 
-fn addToRanges(allocator: std.mem.Allocator, ranges: *std.ArrayList(Range), range: Range) anyerror!void {
+fn addToRanges(allocator: std.mem.Allocator, ranges: *std.ArrayList(Range), range: Range) !void {
     for (ranges.items) |ext_range, i| {
         const merged = Range.merge(range, ext_range);
         if (merged != null) {
@@ -98,7 +98,7 @@ fn sumRanges(ranges: *std.ArrayList(Range)) i64 {
     return sum;
 }
 
-fn getRanges(ranges: *std.ArrayList(Range), allocator: std.mem.Allocator, sbpairs: *std.ArrayList(SBPair), y: i64) anyerror!void {
+fn getRanges(ranges: *std.ArrayList(Range), allocator: std.mem.Allocator, sbpairs: *std.ArrayList(SBPair), y: i64) !void {
     ranges.clearRetainingCapacity();
 
     for (sbpairs.items) |sbpair| {
@@ -116,7 +116,7 @@ fn getRanges(ranges: *std.ArrayList(Range), allocator: std.mem.Allocator, sbpair
     }
 }
 
-fn solve1(path: []const u8, y: i64) anyerror!usize {
+fn solve1(path: []const u8, y: i64) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -132,7 +132,7 @@ fn solve1(path: []const u8, y: i64) anyerror!usize {
     return ans;
 }
 
-fn solve2(path: []const u8, xmax: i64, ymax: i64) anyerror!usize {
+fn solve2(path: []const u8, xmax: i64, ymax: i64) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -161,19 +161,19 @@ fn solve2(path: []const u8, xmax: i64, ymax: i64) anyerror!usize {
     unreachable;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_15.txt", 10);
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve2("problems/example_15.txt", 20, 20);
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_15.txt", 2000000);
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_15.txt", 4000000, 4000000);
 }
 

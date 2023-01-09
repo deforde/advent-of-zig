@@ -7,7 +7,7 @@ const Node = struct {
     val: ?i32 = null,
     divider: bool = false,
 
-    pub fn descend(self: *Node, allocator: std.mem.Allocator) anyerror!*Node {
+    pub fn descend(self: *Node, allocator: std.mem.Allocator) !*Node {
         try self.children.append(Node{
             .parent = self,
             .children = std.ArrayList(Node).init(allocator),
@@ -15,11 +15,11 @@ const Node = struct {
         return &self.children.items[self.children.items.len - 1];
     }
 
-    pub fn ascend(self: *Node) anyerror!*Node {
+    pub fn ascend(self: *Node) !*Node {
         return self.parent.?;
     }
 
-    pub fn print(self: *const Node, allocator: std.mem.Allocator, indent: []const u8) anyerror!void {
+    pub fn print(self: *const Node, allocator: std.mem.Allocator, indent: []const u8) !void {
         std.debug.print("{s}{}\n", .{ indent, self.val orelse -1 });
         const new_indent = try std.fmt.allocPrint(allocator, "{s}  ", .{indent});
         defer allocator.free(new_indent);
@@ -28,7 +28,7 @@ const Node = struct {
         }
     }
 
-    pub fn convertValToChild(self: *Node, allocator: std.mem.Allocator) anyerror!void {
+    pub fn convertValToChild(self: *Node, allocator: std.mem.Allocator) !void {
         std.debug.assert(self.val != null);
         const val = self.val;
         self.val = null;
@@ -44,7 +44,7 @@ const Node = struct {
     }
 };
 
-fn genNode(allocator: std.mem.Allocator, s: []const u8) anyerror!Node {
+fn genNode(allocator: std.mem.Allocator, s: []const u8) !Node {
     std.debug.assert(s[0] == '[');
 
     var root = Node{
@@ -88,7 +88,7 @@ fn genNode(allocator: std.mem.Allocator, s: []const u8) anyerror!Node {
     return root;
 }
 
-fn compareNodes(allocator: std.mem.Allocator, p: *Node, q: *Node) anyerror!i32 {
+fn compareNodes(allocator: std.mem.Allocator, p: *Node, q: *Node) !i32 {
     var l = p;
     var r = q;
 
@@ -144,7 +144,7 @@ fn compareNodes(allocator: std.mem.Allocator, p: *Node, q: *Node) anyerror!i32 {
     return 0;
 }
 
-fn sortPackets(allocator: std.mem.Allocator, packets: *std.ArrayList(Node)) anyerror!void {
+fn sortPackets(allocator: std.mem.Allocator, packets: *std.ArrayList(Node)) !void {
     var change_made = true;
     while (change_made) {
         change_made = false;
@@ -162,7 +162,7 @@ fn sortPackets(allocator: std.mem.Allocator, packets: *std.ArrayList(Node)) anye
     }
 }
 
-fn solve1(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -199,7 +199,7 @@ fn solve1(path: []const u8) anyerror!usize {
     return sum;
 }
 
-fn solve2(path: []const u8) anyerror!usize {
+fn solve2(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -242,19 +242,19 @@ fn solve2(path: []const u8) anyerror!usize {
     return prod;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_13.txt");
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve2("problems/example_13.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_13.txt");
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_13.txt");
 }
 

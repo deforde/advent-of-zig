@@ -30,7 +30,7 @@ fn printList(l: NodeList) void {
     std.debug.print("{}\n", .{n.x});
 }
 
-fn doMix(l: *NodeList, n: *Node, len: usize) anyerror!void {
+fn doMix(l: *NodeList, n: *Node, len: usize) !void {
     const x = n.x;
     if (x != 0) {
         var mprev = n.mprev.?;
@@ -69,7 +69,7 @@ fn doMix(l: *NodeList, n: *Node, len: usize) anyerror!void {
     }
 }
 
-fn mixList(l: *NodeList, len: usize) anyerror!void {
+fn mixList(l: *NodeList, len: usize) !void {
     var n = l.head.?;
     while (n != l.tail.?) : (n = n.next.?) {
         try doMix(l, n, len);
@@ -77,7 +77,7 @@ fn mixList(l: *NodeList, len: usize) anyerror!void {
     try doMix(l, n, len);
 }
 
-fn solve(path: []const u8, decrypt_key: i64, nmix: usize) anyerror!i64 {
+fn solve(path: []const u8, decrypt_key: i64, nmix: usize) !i64 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -141,19 +141,19 @@ fn solve(path: []const u8, decrypt_key: i64, nmix: usize) anyerror!i64 {
     return sum;
 }
 
-fn example1() anyerror!i64 {
+fn example1() !i64 {
     return solve("problems/example_20.txt", 1, 1);
 }
 
-fn example2() anyerror!i64 {
+fn example2() !i64 {
     return solve("problems/example_20.txt", 811589153, 10);
 }
 
-fn part1() anyerror!i64 {
+fn part1() !i64 {
     return solve("problems/problem_20.txt", 1, 1);
 }
 
-fn part2() anyerror!i64 {
+fn part2() !i64 {
     return solve("problems/problem_20.txt", 811589153, 10);
 }
 

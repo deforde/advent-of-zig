@@ -290,7 +290,7 @@ fn walk2(grid: Grid, pos: Coord, dir: *u8) Coord {
     return new_pos;
 }
 
-fn solve1(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -350,7 +350,7 @@ fn solve1(path: []const u8) anyerror!usize {
     return ans;
 }
 
-fn solve2(path: []const u8) anyerror!usize {
+fn solve2(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -407,15 +407,15 @@ fn solve2(path: []const u8) anyerror!usize {
     return ans;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_22.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_22.txt");
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_22.txt");
 }
 

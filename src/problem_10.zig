@@ -47,7 +47,7 @@ const VM = struct {
     }
 };
 
-fn solve(path: []const u8) anyerror!usize {
+fn solve(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -72,11 +72,11 @@ fn solve(path: []const u8) anyerror!usize {
     return vm.sig_strength_sum;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve("problems/example_10.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve("problems/problem_10.txt");
 }
 

@@ -44,7 +44,7 @@ fn getState(cols: *Columns, shape_ty_idx: usize, buf_idx: usize) State {
     return state;
 }
 
-fn updateColumns(s: *Shape, cols: *Columns) anyerror!void {
+fn updateColumns(s: *Shape, cols: *Columns) !void {
     for (s.items) |c| {
         var col = &cols.items[@intCast(usize, c.x)];
         try col.append(c.y);
@@ -81,7 +81,7 @@ fn getColMax(cols: *Columns) i64 {
     return max;
 }
 
-fn procMove(m: u8, s: *Shape, cols: *Columns) anyerror!void {
+fn procMove(m: u8, s: *Shape, cols: *Columns) !void {
     var ns = try s.clone();
 
     switch (m) {
@@ -107,7 +107,7 @@ fn procMove(m: u8, s: *Shape, cols: *Columns) anyerror!void {
     s.* = ns;
 }
 
-fn descend(s: *Shape, cols: *Columns) anyerror!bool {
+fn descend(s: *Shape, cols: *Columns) !bool {
     var ns = try s.clone();
 
     for (ns.items) |*c| {
@@ -144,7 +144,7 @@ fn checkCollisions(cols: *Columns, s: *Shape) bool {
     return false;
 }
 
-fn genShape(allocator: std.mem.Allocator, ty: ShapeTy, cols: *Columns) anyerror!Shape {
+fn genShape(allocator: std.mem.Allocator, ty: ShapeTy, cols: *Columns) !Shape {
     const miny = getColMax(cols) + 4;
 
     var shape = Shape.init(allocator);
@@ -195,7 +195,7 @@ fn printCols(cols: Columns) void {
     std.debug.print("\n", .{});
 }
 
-fn solve(path: []const u8, nshapes: usize) anyerror!usize {
+fn solve(path: []const u8, nshapes: usize) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -275,19 +275,19 @@ fn solve(path: []const u8, nshapes: usize) anyerror!usize {
     return ans;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve("problems/example_17.txt", 2022);
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve("problems/example_17.txt", 1000000000000);
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve("problems/problem_17.txt", 2022);
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve("problems/problem_17.txt", 1000000000000);
 }
 

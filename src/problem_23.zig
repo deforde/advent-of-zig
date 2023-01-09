@@ -10,7 +10,7 @@ const ElfMap = std.AutoHashMap(Coord, Coord);
 
 const DirList = std.ArrayList(u8);
 
-fn createMap(allocator: std.mem.Allocator, path: []const u8) anyerror!ElfMap {
+fn createMap(allocator: std.mem.Allocator, path: []const u8) !ElfMap {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
@@ -33,7 +33,7 @@ fn createMap(allocator: std.mem.Allocator, path: []const u8) anyerror!ElfMap {
     return map;
 }
 
-fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
+fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) !Coord {
     var cnt: i64 = 0;
     var x: i64 = 0;
     var y: i64 = 0;
@@ -121,7 +121,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
     return c;
 }
 
-fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) anyerror!bool {
+fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) !bool {
     var nmap = ElfMap.init(allocator);
     var banned = ElfMap.init(allocator);
     defer banned.deinit();
@@ -217,7 +217,7 @@ fn printMap(map: *ElfMap) void {
     std.debug.print("\n", .{});
 }
 
-fn solve1(path: []const u8) anyerror!i64 {
+fn solve1(path: []const u8) !i64 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -242,7 +242,7 @@ fn solve1(path: []const u8) anyerror!i64 {
     return countEmptyTiles(&map);
 }
 
-fn solve2(path: []const u8) anyerror!i64 {
+fn solve2(path: []const u8) !i64 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -264,19 +264,19 @@ fn solve2(path: []const u8) anyerror!i64 {
     return i;
 }
 
-fn example1() anyerror!i64 {
+fn example1() !i64 {
     return solve1("problems/example_23.txt");
 }
 
-fn example2() anyerror!i64 {
+fn example2() !i64 {
     return solve2("problems/example_23.txt");
 }
 
-fn part1() anyerror!i64 {
+fn part1() !i64 {
     return solve1("problems/problem_23.txt");
 }
 
-fn part2() anyerror!i64 {
+fn part2() !i64 {
     return solve2("problems/problem_23.txt");
 }
 

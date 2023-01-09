@@ -1,7 +1,7 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
-fn solve(path: []const u8) anyerror!usize {
+fn solve(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -13,7 +13,7 @@ fn solve(path: []const u8) anyerror!usize {
     return ans;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve("problems/example_01.txt");
 }
 

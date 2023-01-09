@@ -1,7 +1,7 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
-fn createGrid(path: []const u8, nrows: *usize, ncols: *usize) anyerror![99][99]i32 {
+fn createGrid(path: []const u8, nrows: *usize, ncols: *usize) ![99][99]i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -29,7 +29,7 @@ fn createGrid(path: []const u8, nrows: *usize, ncols: *usize) anyerror![99][99]i
     return grid;
 }
 
-fn solve1(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) !usize {
     var nrows: usize = 0;
     var ncols: usize = 0;
     const grid = try createGrid(path, &nrows, &ncols);
@@ -114,7 +114,7 @@ fn solve1(path: []const u8) anyerror!usize {
     return cnt;
 }
 
-fn solve2(path: []const u8) anyerror!usize {
+fn solve2(path: []const u8) !usize {
     var nrows: usize = 0;
     var ncols: usize = 0;
     const grid = try createGrid(path, &nrows, &ncols);
@@ -190,19 +190,19 @@ fn solve2(path: []const u8) anyerror!usize {
     return max_score;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_08.txt");
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve2("problems/example_08.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_08.txt");
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_08.txt");
 }
 

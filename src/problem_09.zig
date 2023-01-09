@@ -6,7 +6,7 @@ const Coord = struct {
     y: i32 = 0,
 };
 
-fn moveFollower(leader: Coord, follower: *Coord) anyerror!void {
+fn moveFollower(leader: Coord, follower: *Coord) !void {
     var delta_x = leader.x - follower.*.x;
     var delta_y = leader.y - follower.*.y;
 
@@ -25,7 +25,7 @@ fn moveFollower(leader: Coord, follower: *Coord) anyerror!void {
     follower.*.y += delta_y;
 }
 
-fn logTailPos(tail: Coord, tail_positions: *std.ArrayList(Coord)) anyerror!void {
+fn logTailPos(tail: Coord, tail_positions: *std.ArrayList(Coord)) !void {
     for (tail_positions.*.items) |pos| {
         if (pos.x == tail.x and pos.y == tail.y) {
             return;
@@ -34,7 +34,7 @@ fn logTailPos(tail: Coord, tail_positions: *std.ArrayList(Coord)) anyerror!void 
     try tail_positions.*.append(tail);
 }
 
-fn simRope(rope: *std.ArrayList(Coord), tail_positions: *std.ArrayList(Coord)) anyerror!void {
+fn simRope(rope: *std.ArrayList(Coord), tail_positions: *std.ArrayList(Coord)) !void {
     var i: usize = 0;
     while (i < rope.*.items.len - 1) : (i += 1) {
         try moveFollower(rope.*.items[i], &rope.*.items[i + 1]);
@@ -42,7 +42,7 @@ fn simRope(rope: *std.ArrayList(Coord), tail_positions: *std.ArrayList(Coord)) a
     try logTailPos(rope.*.items[rope.items.len - 1], tail_positions);
 }
 
-fn solve(path: []const u8, nknots: usize) anyerror!usize {
+fn solve(path: []const u8, nknots: usize) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -104,19 +104,19 @@ fn solve(path: []const u8, nknots: usize) anyerror!usize {
     return ans;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve("problems/example_1_09.txt", 2);
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve("problems/example_2_09.txt", 10);
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve("problems/problem_09.txt", 2);
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve("problems/problem_09.txt", 10);
 }
 

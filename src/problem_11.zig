@@ -21,7 +21,7 @@ const Monkey = struct {
     }
 };
 
-fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.ArrayList(Monkey) {
+fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) !std.ArrayList(Monkey) {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
@@ -67,7 +67,7 @@ fn genMonkeys(allocator: std.mem.Allocator, path: []const u8) anyerror!std.Array
     return monkeys;
 }
 
-fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) anyerror!void {
+fn simRounds(monkeys: *std.ArrayList(Monkey), nrounds: usize, do_div: bool) !void {
     var super_modulo: u64 = 1;
     var k: usize = 0;
     while (k < monkeys.items.len) : (k += 1) {
@@ -119,7 +119,7 @@ fn printMonkeys(monkeys: *std.ArrayList(Monkey)) void {
     }
 }
 
-fn solve(path: []const u8, nrounds: usize, do_div: bool) anyerror!usize {
+fn solve(path: []const u8, nrounds: usize, do_div: bool) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -148,19 +148,19 @@ fn solve(path: []const u8, nrounds: usize, do_div: bool) anyerror!usize {
     return ans;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve("problems/example_11.txt", 20, true);
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve("problems/example_11.txt", 10000, false);
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve("problems/problem_11.txt", 20, true);
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve("problems/problem_11.txt", 10000, false);
 }
 

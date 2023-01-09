@@ -34,7 +34,7 @@ const State = struct {
     viable: BotArr = BotArr{ 1, 1, 1, 1 },
 };
 
-fn getBlueprints(allocator: std.mem.Allocator, path: []const u8) anyerror!std.ArrayList(BluePrint) {
+fn getBlueprints(allocator: std.mem.Allocator, path: []const u8) !std.ArrayList(BluePrint) {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
@@ -109,7 +109,7 @@ fn tryBuildGeoBot(state: *State, bp: BluePrint) bool {
     return false;
 }
 
-fn branchState(allocator: std.mem.Allocator, state: *State, bp: BluePrint, pc: MatArr) anyerror!std.ArrayList(State) {
+fn branchState(allocator: std.mem.Allocator, state: *State, bp: BluePrint, pc: MatArr) !std.ArrayList(State) {
     var nstates = std.ArrayList(State).init(allocator);
 
     var bot: usize = 0;
@@ -158,7 +158,7 @@ fn pruneStates(states: *std.ArrayList(State), mr: u32) void {
     }
 }
 
-fn runBlueprint(allocator: std.mem.Allocator, bp: BluePrint, mins: u32) anyerror!u32 {
+fn runBlueprint(allocator: std.mem.Allocator, bp: BluePrint, mins: u32) !u32 {
     var states = std.ArrayList(State).init(allocator);
     defer states.deinit();
     try states.append(State{});
@@ -190,7 +190,7 @@ fn runBlueprint(allocator: std.mem.Allocator, bp: BluePrint, mins: u32) anyerror
     return max_geo;
 }
 
-fn solve1(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -206,7 +206,7 @@ fn solve1(path: []const u8) anyerror!usize {
     return sum;
 }
 
-fn solve2(path: []const u8) anyerror!usize {
+fn solve2(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -223,19 +223,19 @@ fn solve2(path: []const u8) anyerror!usize {
     return prod;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_19.txt");
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve2("problems/example_19.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_19.txt");
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_19.txt");
 }
 

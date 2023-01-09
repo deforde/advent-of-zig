@@ -43,7 +43,7 @@ fn calcNode(n: *Node) i64 {
     }
 }
 
-fn initNodes(buf: []const u8, store: *BackingStore, root: *?*Node) anyerror!void {
+fn initNodes(buf: []const u8, store: *BackingStore, root: *?*Node) !void {
     var idx: usize = 0;
 
     var lines = std.mem.tokenize(u8, buf, "\n");
@@ -96,7 +96,7 @@ fn initNodes(buf: []const u8, store: *BackingStore, root: *?*Node) anyerror!void
     }
 }
 
-fn solve1(path: []const u8) anyerror!i64 {
+fn solve1(path: []const u8) !i64 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -111,7 +111,7 @@ fn solve1(path: []const u8) anyerror!i64 {
     return calcNode(root.?);
 }
 
-fn solve2(path: []const u8) anyerror!i64 {
+fn solve2(path: []const u8) !i64 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -153,19 +153,19 @@ fn solve2(path: []const u8) anyerror!i64 {
     return n.v;
 }
 
-fn example1() anyerror!i64 {
+fn example1() !i64 {
     return solve1("problems/example_21.txt");
 }
 
-fn example2() anyerror!i64 {
+fn example2() !i64 {
     return solve2("problems/example_21.txt");
 }
 
-fn part1() anyerror!i64 {
+fn part1() !i64 {
     return solve1("problems/problem_21.txt");
 }
 
-fn part2() anyerror!i64 {
+fn part2() !i64 {
     return solve2("problems/problem_21.txt");
 }
 

@@ -17,7 +17,7 @@ const DirArr = [4]u8;
 
 const BlizzMap = std.AutoHashMap(Coord, [4]u8);
 
-fn initMap(allocator: std.mem.Allocator, path: []const u8, nrows: *i32, ncols: *i32) anyerror!BlizzMap {
+fn initMap(allocator: std.mem.Allocator, path: []const u8, nrows: *i32, ncols: *i32) !BlizzMap {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
@@ -83,7 +83,7 @@ fn moveBlizz(pos: Coord, dir: Dir, nrows: i32, ncols: i32) Coord {
     }
 }
 
-fn updateMapEntry(map: *BlizzMap, pos: Coord, dir: Dir) anyerror!void {
+fn updateMapEntry(map: *BlizzMap, pos: Coord, dir: Dir) !void {
     var blizz = map.getPtr(pos);
     if (blizz == null) {
         var dir_arr = std.mem.zeroes(DirArr);
@@ -95,7 +95,7 @@ fn updateMapEntry(map: *BlizzMap, pos: Coord, dir: Dir) anyerror!void {
     }
 }
 
-fn iterateMap(allocator: std.mem.Allocator, map: *BlizzMap, nrows: i32, ncols: i32) anyerror!void {
+fn iterateMap(allocator: std.mem.Allocator, map: *BlizzMap, nrows: i32, ncols: i32) !void {
     var nmap = BlizzMap.init(allocator);
 
     var it = map.iterator();
@@ -116,13 +116,13 @@ fn iterateMap(allocator: std.mem.Allocator, map: *BlizzMap, nrows: i32, ncols: i
     map.* = nmap;
 }
 
-fn appendIfOpen(map: *BlizzMap, moves: *std.ArrayList(Coord), pos: Coord) anyerror!void {
+fn appendIfOpen(map: *BlizzMap, moves: *std.ArrayList(Coord), pos: Coord) !void {
     if (map.get(pos) == null) {
         try moves.append(pos);
     }
 }
 
-fn getViableMoves(allocator: std.mem.Allocator, map: *BlizzMap, pos: Coord, nrows: i32, ncols: i32) anyerror!std.ArrayList(Coord) {
+fn getViableMoves(allocator: std.mem.Allocator, map: *BlizzMap, pos: Coord, nrows: i32, ncols: i32) !std.ArrayList(Coord) {
     var moves = std.ArrayList(Coord).init(allocator);
 
     try appendIfOpen(map, &moves, pos);
@@ -158,13 +158,13 @@ fn isContained(paths: *std.ArrayList(Coord), pos: Coord) bool {
     return false;
 }
 
-fn appendUnique(paths: *std.ArrayList(Coord), pos: Coord) anyerror!void {
+fn appendUnique(paths: *std.ArrayList(Coord), pos: Coord) !void {
     if (!isContained(paths, pos)) {
         try paths.append(pos);
     }
 }
 
-fn getQuickestPath(allocator: std.mem.Allocator, map: *BlizzMap, strt: Coord, end: Coord, nrows: i32, ncols: i32) anyerror!i32 {
+fn getQuickestPath(allocator: std.mem.Allocator, map: *BlizzMap, strt: Coord, end: Coord, nrows: i32, ncols: i32) !i32 {
     var paths = std.ArrayList(Coord).init(allocator);
     defer paths.deinit();
     try paths.append(strt);
@@ -190,7 +190,7 @@ fn getQuickestPath(allocator: std.mem.Allocator, map: *BlizzMap, strt: Coord, en
     unreachable;
 }
 
-fn solve1(path: []const u8) anyerror!i32 {
+fn solve1(path: []const u8) !i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -205,7 +205,7 @@ fn solve1(path: []const u8) anyerror!i32 {
     return try getQuickestPath(allocator, &map, strt, end, nrows, ncols) + 1;
 }
 
-fn solve2(path: []const u8) anyerror!i32 {
+fn solve2(path: []const u8) !i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -232,19 +232,19 @@ fn solve2(path: []const u8) anyerror!i32 {
     return mins;
 }
 
-fn example1() anyerror!i32 {
+fn example1() !i32 {
     return solve1("problems/example_24.txt");
 }
 
-fn example2() anyerror!i32 {
+fn example2() !i32 {
     return solve2("problems/example_24.txt");
 }
 
-fn part1() anyerror!i32 {
+fn part1() !i32 {
     return solve1("problems/problem_24.txt");
 }
 
-fn part2() anyerror!i32 {
+fn part2() !i32 {
     return solve2("problems/problem_24.txt");
 }
 

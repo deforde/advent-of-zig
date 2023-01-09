@@ -10,7 +10,7 @@ fn updateList(list: []i32, sum: i32) void {
     }
 }
 
-fn getSumList() anyerror![3]i32 {
+fn getSumList() ![3]i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -36,12 +36,12 @@ fn getSumList() anyerror![3]i32 {
     return list;
 }
 
-fn part1() anyerror!i32 {
+fn part1() !i32 {
     var list = try getSumList();
     return list[0];
 }
 
-fn part2() anyerror!i32 {
+fn part2() !i32 {
     var list = try getSumList();
     return list[0] + list[1] + list[2];
 }

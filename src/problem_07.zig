@@ -6,7 +6,7 @@ const Node = struct {
     children: std.StringHashMap(Node),
     size: ?usize = null,
 
-    pub fn addChild(self: *Node, allocator: std.mem.Allocator, name: []const u8, size: ?usize) anyerror!void {
+    pub fn addChild(self: *Node, allocator: std.mem.Allocator, name: []const u8, size: ?usize) !void {
         const child = Node{
             .parent = self,
             .children = std.StringHashMap(Node).init(allocator),
@@ -30,7 +30,7 @@ const Node = struct {
     }
 };
 
-fn printNode(allocator: std.mem.Allocator, name: []const u8, node: *const Node, indent: []const u8) anyerror!void {
+fn printNode(allocator: std.mem.Allocator, name: []const u8, node: *const Node, indent: []const u8) !void {
     std.debug.print("{s}{s}: {}\n", .{ indent, name, node.size orelse 0 });
     const new_ident = try std.fmt.allocPrint(allocator, "{s}  ", .{indent});
     defer allocator.free(new_ident);
@@ -40,7 +40,7 @@ fn printNode(allocator: std.mem.Allocator, name: []const u8, node: *const Node, 
     }
 }
 
-fn printTree(allocator: std.mem.Allocator, root: *const Node) anyerror!void {
+fn printTree(allocator: std.mem.Allocator, root: *const Node) !void {
     try printNode(allocator, "/", root, "");
 }
 
@@ -88,7 +88,7 @@ fn freeTree(root: *Node) void {
     freeTreeInner(root);
 }
 
-fn createTree(allocator: std.mem.Allocator, buf: []const u8) anyerror!Node {
+fn createTree(allocator: std.mem.Allocator, buf: []const u8) !Node {
     var root = Node{
         .children = std.StringHashMap(Node).init(allocator),
     };
@@ -139,7 +139,7 @@ fn createTree(allocator: std.mem.Allocator, buf: []const u8) anyerror!Node {
     return root;
 }
 
-fn solve1(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -157,7 +157,7 @@ fn solve1(path: []const u8) anyerror!usize {
     return ans;
 }
 
-fn solve2(path: []const u8) anyerror!usize {
+fn solve2(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -181,19 +181,19 @@ fn solve2(path: []const u8) anyerror!usize {
     return ans;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_07.txt");
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve2("problems/example_07.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_07.txt");
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_07.txt");
 }
 

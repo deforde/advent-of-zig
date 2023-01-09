@@ -15,7 +15,7 @@ const PathTip = struct {
 
 const Dir = enum { FWD, REV };
 
-fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, ncols: *usize, start: *Coord, end: *Coord) anyerror!Grid {
+fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, ncols: *usize, start: *Coord, end: *Coord) !Grid {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
@@ -52,7 +52,7 @@ fn createGrid(allocator: std.mem.Allocator, path: []const u8, nrows: *usize, nco
     return grid;
 }
 
-fn procMove(height: i32, other_pos: Coord, dir: Dir, grid: Grid, visited: Grid, moves: *std.ArrayList(Coord)) anyerror!void {
+fn procMove(height: i32, other_pos: Coord, dir: Dir, grid: Grid, visited: Grid, moves: *std.ArrayList(Coord)) !void {
     const other_height = grid[other_pos.x][other_pos.y];
     const viable = switch (dir) {
         Dir.FWD => other_height <= height + 1,
@@ -63,7 +63,7 @@ fn procMove(height: i32, other_pos: Coord, dir: Dir, grid: Grid, visited: Grid, 
     }
 }
 
-fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: Grid, pos: Coord, dir: Dir) anyerror!std.ArrayList(Coord) {
+fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, visited: Grid, pos: Coord, dir: Dir) !std.ArrayList(Coord) {
     var moves = std.ArrayList(Coord).init(allocator);
     const height = grid[pos.x][pos.y];
 
@@ -94,7 +94,7 @@ fn getViableMoves(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols:
     return moves;
 }
 
-fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, ends: Grid, visited: *Grid, dir: Dir) anyerror!usize {
+fn getShortestPath(allocator: std.mem.Allocator, grid: Grid, nrows: usize, ncols: usize, start: Coord, ends: Grid, visited: *Grid, dir: Dir) !usize {
     var path_tips = std.ArrayList(PathTip).init(allocator);
     defer path_tips.deinit();
     try path_tips.append(PathTip{ .pos = start, .len = 0 });
@@ -130,7 +130,7 @@ fn getAllPossibleStarts(grid: Grid, nrows: usize, ncols: usize) Grid {
     return starts;
 }
 
-fn solve1(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -149,7 +149,7 @@ fn solve1(path: []const u8) anyerror!usize {
     return try getShortestPath(allocator, grid, nrows, ncols, start, ends, &visited, Dir.FWD);
 }
 
-fn solve2(path: []const u8) anyerror!usize {
+fn solve2(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -167,19 +167,19 @@ fn solve2(path: []const u8) anyerror!usize {
     return try getShortestPath(allocator, grid, nrows, ncols, end, starts, &visited, Dir.REV);
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_12.txt");
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve2("problems/example_12.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_12.txt");
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_12.txt");
 }
 

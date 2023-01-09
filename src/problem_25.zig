@@ -64,7 +64,7 @@ fn toSNAFU(n: i64) SNAFU {
     return s;
 }
 
-fn solve(path: []const u8) anyerror!SNAFU {
+fn solve(path: []const u8) !SNAFU {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -82,11 +82,11 @@ fn solve(path: []const u8) anyerror!SNAFU {
     return toSNAFU(sum);
 }
 
-fn example1() anyerror!SNAFU {
+fn example1() !SNAFU {
     return solve("problems/example_25.txt");
 }
 
-fn part1() anyerror!SNAFU {
+fn part1() !SNAFU {
     return solve("problems/problem_25.txt");
 }
 

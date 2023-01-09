@@ -11,7 +11,7 @@ const Coord = struct {
 
 const Dims = Coord;
 
-fn createGrid(path: []const u8, dims: *Dims) anyerror!Grid {
+fn createGrid(path: []const u8, dims: *Dims) !Grid {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -142,7 +142,7 @@ fn floodFill(grid: *Grid, dims: Dims) void {
     }
 }
 
-fn solve1(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) !usize {
     var dims = Dims{};
     var grid = try createGrid(path, &dims);
 
@@ -165,7 +165,7 @@ fn solve1(path: []const u8) anyerror!usize {
     return sa;
 }
 
-fn solve2(path: []const u8) anyerror!usize {
+fn solve2(path: []const u8) !usize {
     var dims = Dims{};
     var grid = try createGrid(path, &dims);
     floodFill(&grid, dims);
@@ -189,19 +189,19 @@ fn solve2(path: []const u8) anyerror!usize {
     return sa;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_18.txt");
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve2("problems/example_18.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_18.txt");
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_18.txt");
 }
 

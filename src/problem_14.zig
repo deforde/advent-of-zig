@@ -8,7 +8,7 @@ const Coord = struct {
 
 const Map = std.AutoHashMap(Coord, u8);
 
-fn createMap(allocator: std.mem.Allocator, path: []const u8, xmin: *isize, xmax: *isize, ymax: *isize) anyerror!Map {
+fn createMap(allocator: std.mem.Allocator, path: []const u8, xmin: *isize, xmax: *isize, ymax: *isize) !Map {
     const buf = try readFileIntoBuf(allocator, path);
     defer allocator.free(buf);
 
@@ -59,7 +59,7 @@ fn createMap(allocator: std.mem.Allocator, path: []const u8, xmin: *isize, xmax:
     return map;
 }
 
-fn solve1(path: []const u8) anyerror!usize {
+fn solve1(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -103,7 +103,7 @@ fn solve1(path: []const u8) anyerror!usize {
     return rst_cnt;
 }
 
-fn solve2(path: []const u8) anyerror!usize {
+fn solve2(path: []const u8) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -146,19 +146,19 @@ fn solve2(path: []const u8) anyerror!usize {
     return rst_cnt;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve1("problems/example_14.txt");
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve2("problems/example_14.txt");
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve1("problems/problem_14.txt");
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve2("problems/problem_14.txt");
 }
 

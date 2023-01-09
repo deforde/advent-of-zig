@@ -1,7 +1,7 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
-fn solve(path: []const u8, stm_cnt: usize) anyerror!usize {
+fn solve(path: []const u8, stm_cnt: usize) !usize {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -28,51 +28,51 @@ fn solve(path: []const u8, stm_cnt: usize) anyerror!usize {
     return i + 1;
 }
 
-fn example1() anyerror!usize {
+fn example1() !usize {
     return solve("problems/example_1_06.txt", 4);
 }
 
-fn example2() anyerror!usize {
+fn example2() !usize {
     return solve("problems/example_2_06.txt", 4);
 }
 
-fn example3() anyerror!usize {
+fn example3() !usize {
     return solve("problems/example_3_06.txt", 4);
 }
 
-fn example4() anyerror!usize {
+fn example4() !usize {
     return solve("problems/example_4_06.txt", 4);
 }
 
-fn example5() anyerror!usize {
+fn example5() !usize {
     return solve("problems/example_5_06.txt", 4);
 }
 
-fn example1_2() anyerror!usize {
+fn example1_2() !usize {
     return solve("problems/example_1_06.txt", 14);
 }
 
-fn example2_2() anyerror!usize {
+fn example2_2() !usize {
     return solve("problems/example_2_06.txt", 14);
 }
 
-fn example3_2() anyerror!usize {
+fn example3_2() !usize {
     return solve("problems/example_3_06.txt", 14);
 }
 
-fn example4_2() anyerror!usize {
+fn example4_2() !usize {
     return solve("problems/example_4_06.txt", 14);
 }
 
-fn example5_2() anyerror!usize {
+fn example5_2() !usize {
     return solve("problems/example_5_06.txt", 14);
 }
 
-fn part1() anyerror!usize {
+fn part1() !usize {
     return solve("problems/problem_06.txt", 4);
 }
 
-fn part2() anyerror!usize {
+fn part2() !usize {
     return solve("problems/problem_06.txt", 14);
 }
 

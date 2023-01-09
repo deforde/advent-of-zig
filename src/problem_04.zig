@@ -1,7 +1,7 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
-fn solve1(path: []const u8) anyerror!i32 {
+fn solve1(path: []const u8) !i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -25,7 +25,7 @@ fn solve1(path: []const u8) anyerror!i32 {
     return count;
 }
 
-fn solve2(path: []const u8) anyerror!i32 {
+fn solve2(path: []const u8) !i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -51,19 +51,19 @@ fn solve2(path: []const u8) anyerror!i32 {
     return count;
 }
 
-fn example1() anyerror!i32 {
+fn example1() !i32 {
     return solve1("problems/example_04.txt");
 }
 
-fn example2() anyerror!i32 {
+fn example2() !i32 {
     return solve2("problems/example_04.txt");
 }
 
-fn part1() anyerror!i32 {
+fn part1() !i32 {
     return solve1("problems/problem_04.txt");
 }
 
-fn part2() anyerror!i32 {
+fn part2() !i32 {
     return solve2("problems/problem_04.txt");
 }
 

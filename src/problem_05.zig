@@ -1,7 +1,7 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
-fn solve(path: []const u8, simultaneous: bool) anyerror![9]u8 {
+fn solve(path: []const u8, simultaneous: bool) ![9]u8 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -74,19 +74,19 @@ fn solve(path: []const u8, simultaneous: bool) anyerror![9]u8 {
     return ans;
 }
 
-fn example1() anyerror![9]u8 {
+fn example1() ![9]u8 {
     return solve("problems/example_05.txt", false);
 }
 
-fn example2() anyerror![9]u8 {
+fn example2() ![9]u8 {
     return solve("problems/example_05.txt", true);
 }
 
-fn part1() anyerror![9]u8 {
+fn part1() ![9]u8 {
     return solve("problems/problem_05.txt", false);
 }
 
-fn part2() anyerror![9]u8 {
+fn part2() ![9]u8 {
     return solve("problems/problem_05.txt", true);
 }
 
