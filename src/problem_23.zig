@@ -40,7 +40,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
 
     cnt = 0;
     x = c.x - 1;
-    while (x <= c.x + 1) : (x += 1) {
+    outer: while (x <= c.x + 1) : (x += 1) {
         y = c.y - 1;
         while (y <= c.y + 1) : (y += 1) {
             if (c.x == x and c.y == y) {
@@ -48,6 +48,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
             }
             if (map.get(Coord{ .x = x, .y = y }) != null) {
                 cnt += 1;
+                break :outer;
             }
         }
     }
@@ -64,6 +65,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
                 while (x <= c.x + 1) : (x += 1) {
                     if (map.get(Coord{ .x = x, .y = y }) != null) {
                         cnt += 1;
+                        break;
                     }
                 }
                 if (cnt == 0) {
@@ -77,6 +79,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
                 while (y <= c.y + 1) : (y += 1) {
                     if (map.get(Coord{ .x = x, .y = y }) != null) {
                         cnt += 1;
+                        break;
                     }
                 }
                 if (cnt == 0) {
@@ -90,6 +93,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
                 while (x <= c.x + 1) : (x += 1) {
                     if (map.get(Coord{ .x = x, .y = y }) != null) {
                         cnt += 1;
+                        break;
                     }
                 }
                 if (cnt == 0) {
@@ -103,6 +107,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) anyerror!Coord {
                 while (y <= c.y + 1) : (y += 1) {
                     if (map.get(Coord{ .x = x, .y = y }) != null) {
                         cnt += 1;
+                        break;
                     }
                 }
                 if (cnt == 0) {
@@ -131,10 +136,10 @@ fn simMap(allocator: std.mem.Allocator, map: *ElfMap, dirs: *DirList) anyerror!b
             try nmap.put(e.key_ptr.*, e.key_ptr.*);
             continue;
         }
-        const mv = nmap.get(dst);
+        const mv = nmap.getEntry(dst);
         if (mv != null) {
-            const src = mv.?;
-            _ = nmap.remove(dst);
+            const src = mv.?.value_ptr.*;
+            _ = nmap.removeByPtr(mv.?.key_ptr);
             mv_cnt -= 1;
             try nmap.put(src, src);
             try banned.put(dst, dst);
