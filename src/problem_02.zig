@@ -14,7 +14,7 @@ const p2_score_lookup = [_][3]i32{
 };
 
 fn getTotalScore(path: []const u8, lookup: *const [3][3]i32) !i32 {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

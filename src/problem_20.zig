@@ -78,7 +78,7 @@ fn mixList(l: *NodeList, len: usize) !void {
 }
 
 fn solve(path: []const u8, decrypt_key: i64, nmix: usize) !i64 {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

@@ -2,7 +2,7 @@ const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
 fn createGrid(path: []const u8, nrows: *usize, ncols: *usize) ![99][99]i32 {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

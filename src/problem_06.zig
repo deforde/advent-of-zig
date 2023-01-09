@@ -2,7 +2,7 @@ const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
 fn solve(path: []const u8, stm_cnt: usize) !usize {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

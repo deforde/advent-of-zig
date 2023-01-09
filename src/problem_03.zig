@@ -2,7 +2,7 @@ const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
 
 fn solve1(path: []const u8) !i32 {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 
@@ -59,7 +59,7 @@ fn solve1(path: []const u8) !i32 {
 }
 
 fn solve2(path: []const u8) !i32 {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

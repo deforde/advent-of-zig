@@ -199,7 +199,7 @@ fn getMaxPressPath(allocator: std.mem.Allocator, map: *NodeMap, dist_map: *NodeD
 }
 
 fn solve1(path: []const u8) !usize {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 
@@ -239,7 +239,7 @@ fn solve1(path: []const u8) !usize {
 }
 
 fn solve2(path: []const u8) !usize {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

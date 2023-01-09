@@ -48,7 +48,7 @@ const VM = struct {
 };
 
 fn solve(path: []const u8) !usize {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

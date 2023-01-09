@@ -12,7 +12,7 @@ const Coord = struct {
 const Dims = Coord;
 
 fn createGrid(path: []const u8, dims: *Dims) !Grid {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

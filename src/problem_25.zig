@@ -65,7 +65,7 @@ fn toSNAFU(n: i64) SNAFU {
 }
 
 fn solve(path: []const u8) !SNAFU {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

@@ -117,7 +117,7 @@ fn getRanges(ranges: *std.ArrayList(Range), allocator: std.mem.Allocator, sbpair
 }
 
 fn solve1(path: []const u8, y: i64) !usize {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 
@@ -133,7 +133,7 @@ fn solve1(path: []const u8, y: i64) !usize {
 }
 
 fn solve2(path: []const u8, xmax: i64, ymax: i64) !usize {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 

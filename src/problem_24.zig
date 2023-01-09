@@ -191,7 +191,7 @@ fn getQuickestPath(allocator: std.mem.Allocator, map: *BlizzMap, strt: Coord, en
 }
 
 fn solve1(path: []const u8) !i32 {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 
@@ -206,7 +206,7 @@ fn solve1(path: []const u8) !i32 {
 }
 
 fn solve2(path: []const u8) !i32 {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena = Allocator.init();
     defer arena.deinit();
     const allocator = arena.allocator();
 
