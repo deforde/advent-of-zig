@@ -34,22 +34,54 @@ fn createMap(allocator: std.mem.Allocator, path: []const u8) !ElfMap {
     return map;
 }
 
+fn getOccupied(map: *ElfMap, cache: *[3][3]u8, c: Coord, x: i64, y: i64) bool {
+    if (cache[@intCast(usize, x - c.x + 1)][@intCast(usize, y - c.y + 1)] == 0) {
+        if (map.contains(Coord{ .x = x, .y = y })) {
+            cache[@intCast(usize, x - c.x + 1)][@intCast(usize, y - c.y + 1)] = 2;
+            return true;
+        } else {
+            cache[@intCast(usize, x - c.x + 1)][@intCast(usize, y - c.y + 1)] = 1;
+            return false;
+        }
+    } else if (cache[@intCast(usize, x - c.x + 1)][@intCast(usize, y - c.y + 1)] == 1) {
+        return false;
+    }
+    return true;
+}
+
 fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) !Coord {
     var cnt: i64 = 0;
     var x: i64 = 0;
     var y: i64 = 0;
 
+    var cache = [_][3]u8{
+        [_]u8{
+            0,
+            0,
+            0,
+        },
+        [_]u8{
+            0,
+            0,
+            0,
+        },
+        [_]u8{
+            0,
+            0,
+            0,
+        },
+    };
+
     cnt = 0;
     x = c.x - 1;
-    outer: while (x <= c.x + 1) : (x += 1) {
+    while (x <= c.x + 1) : (x += 1) {
         y = c.y - 1;
         while (y <= c.y + 1) : (y += 1) {
             if (c.x == x and c.y == y) {
                 continue;
             }
-            if (map.get(Coord{ .x = x, .y = y }) != null) {
+            if (getOccupied(map, &cache, c, x, y)) {
                 cnt += 1;
-                break :outer;
             }
         }
     }
@@ -64,7 +96,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) !Coord {
                 x = c.x - 1;
                 y = c.y - 1;
                 while (x <= c.x + 1) : (x += 1) {
-                    if (map.get(Coord{ .x = x, .y = y }) != null) {
+                    if (getOccupied(map, &cache, c, x, y)) {
                         cnt += 1;
                         break;
                     }
@@ -78,7 +110,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) !Coord {
                 x = c.x + 1;
                 y = c.y - 1;
                 while (y <= c.y + 1) : (y += 1) {
-                    if (map.get(Coord{ .x = x, .y = y }) != null) {
+                    if (getOccupied(map, &cache, c, x, y)) {
                         cnt += 1;
                         break;
                     }
@@ -92,7 +124,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) !Coord {
                 x = c.x - 1;
                 y = c.y + 1;
                 while (x <= c.x + 1) : (x += 1) {
-                    if (map.get(Coord{ .x = x, .y = y }) != null) {
+                    if (getOccupied(map, &cache, c, x, y)) {
                         cnt += 1;
                         break;
                     }
@@ -106,7 +138,7 @@ fn moveElf(map: *ElfMap, dirs: *DirList, c: Coord) !Coord {
                 x = c.x - 1;
                 y = c.y - 1;
                 while (y <= c.y + 1) : (y += 1) {
-                    if (map.get(Coord{ .x = x, .y = y }) != null) {
+                    if (getOccupied(map, &cache, c, x, y)) {
                         cnt += 1;
                         break;
                     }
