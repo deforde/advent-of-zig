@@ -1,5 +1,6 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
+const Allocator = @import("allocator.zig").Allocator;
 
 const Coord = struct {
     x: i64 = 0,

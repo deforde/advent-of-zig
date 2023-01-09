@@ -1,5 +1,6 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
+const Allocator = @import("allocator.zig").Allocator;
 
 const p1_score_lookup = [_][3]i32{
     [_]i32{ 4, 8, 3 },

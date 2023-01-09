@@ -1,5 +1,6 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
+const Allocator = @import("allocator.zig").Allocator;
 
 fn createGrid(path: []const u8, nrows: *usize, ncols: *usize) ![99][99]i32 {
     var arena = Allocator.init();

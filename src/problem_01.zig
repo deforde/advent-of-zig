@@ -1,5 +1,6 @@
 const std = @import("std");
 const readFileIntoBuf = @import("util.zig").readFileIntoBuf;
+const Allocator = @import("allocator.zig").Allocator;
 
 fn updateList(list: []i32, sum: i32) void {
     for (list) |val, idx| {
